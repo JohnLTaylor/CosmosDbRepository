@@ -5,6 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>John Taylor</Authors>
     <PackageProjectUrl>https://github.com/JohnLTaylor/DocumentDBRepo</PackageProjectUrl>
+    <AssemblyName>DocDbRepo</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

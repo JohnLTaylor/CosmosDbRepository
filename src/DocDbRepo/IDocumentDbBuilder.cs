@@ -1,7 +1,7 @@
 ﻿using Microsoft.Azure.Documents;
 using System;
 
-namespace DocumentDBRepo
+namespace DocDbRepo
 {
     public interface IDocumentDbBuilder
     {

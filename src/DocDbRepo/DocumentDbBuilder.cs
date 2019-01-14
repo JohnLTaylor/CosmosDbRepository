@@ -1,10 +1,10 @@
-﻿using DocumentDBRepo.Implementation;
+﻿using DocDbRepo.Implementation;
 using Microsoft.Azure.Documents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DocumentDBRepo
+namespace DocDbRepo
 {
     public class DocumentDbBuilder
         : IDocumentDbBuilder

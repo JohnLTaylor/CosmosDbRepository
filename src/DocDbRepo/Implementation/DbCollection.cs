@@ -11,7 +11,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace DocumentDBRepo.Implementation
+namespace DocDbRepo.Implementation
 {
     internal class DbCollection<T>
         : IDbCollection<T>

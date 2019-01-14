@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DocumentDBRepo
+namespace DocDbRepo
 {
     [AttributeUsage(validOn: AttributeTargets.Class)]
     public class DocumentCollectionNameAttribute

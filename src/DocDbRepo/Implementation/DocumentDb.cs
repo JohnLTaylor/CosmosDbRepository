@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 
-namespace DocumentDBRepo.Implementation
+namespace DocDbRepo.Implementation
 {
     internal class DocumentDb
         : IDocumentDb

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace DocumentDBRepo
+namespace DocDbRepo
 {
     public interface IDocumentDb
     {

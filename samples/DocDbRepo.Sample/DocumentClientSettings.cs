@@ -1,6 +1,6 @@
 ﻿using Microsoft.Azure.Documents.Client;
 
-namespace DocumentDBRepo.Sample
+namespace DocDbRepo.Sample
 {
     public class DocumentClientSettings
     {

@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DocumentDBRepo\DocumentDBRepo.csproj" />
+    <ProjectReference Include="..\..\src\DocDbRepo\DocDbRepo.csproj" />
   </ItemGroup>
 
   <ItemGroup>

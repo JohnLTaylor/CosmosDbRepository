@@ -23,4 +23,9 @@ steps:
     testRunner: VSTest
     testResultsFiles: '**/*.trx'
 
-- task: PublishBuildArtifacts@1
+- task: NuGetCommand@2
+  inputs:
+    command: push
+    nuGetFeedType: external
+    publishFeedCredentials: 'Nuget'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'

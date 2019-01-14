@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Converters;
 using System;
 
-namespace DocumentDBRepo.Sample
+namespace DocDbRepo.Sample
 {
     internal class EpochConverter
         : DateTimeConverterBase

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace DocumentDBRepo.Implementation
+namespace DocDbRepo.Implementation
 {
     internal static class WhereExtension
     {

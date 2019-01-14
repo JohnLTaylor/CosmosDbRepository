@@ -1,6 +1,6 @@
 ﻿using Microsoft.Azure.Documents;
 
-namespace DocumentDBRepo
+namespace DocDbRepo
 {
     public interface IDbCollectionBuilder
     {

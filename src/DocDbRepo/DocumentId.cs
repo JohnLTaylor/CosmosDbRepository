@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DocumentDBRepo
+namespace DocDbRepo
 {
     public struct DocumentId
     {

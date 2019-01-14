@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DocumentDBRepo.Sample
+namespace DocDbRepo.Sample
 {
     public class Program
     {

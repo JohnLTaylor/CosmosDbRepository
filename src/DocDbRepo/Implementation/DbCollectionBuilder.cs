@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
-namespace DocumentDBRepo.Implementation
+namespace DocDbRepo.Implementation
 {
     internal class DbCollectionBuilder<T>
         : IDbCollectionBuilder
