@@ -15,13 +15,8 @@ steps:
 - script: |
     dotnet build --configuration $(buildConfiguration)
     dotnet test dotnetcore-tests --configuration $(buildConfiguration) --logger trx
-    dotnet publish --configuration $(buildConfiguration) --output $BUILD_ARTIFACTSTAGINGDIRECTORY
+    dotnet pack src/DocumentDBRepo/DocumentDBRepo.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore
 
-- task: NuGetCommand@2
-  inputs:
-    command: pack
-    packagesToPack: 'src/**/*.csproj'
-    
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
