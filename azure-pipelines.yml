@@ -6,12 +6,22 @@ pool:
   
 variables:
   buildConfiguration: 'Release'
+  major: 1
+  minor: 0
+  patch: $[counter('myversioncounter', 0)]
+ 
 
 steps:
 - script: |
     dotnet build --configuration $(buildConfiguration)
     dotnet test dotnetcore-tests --configuration $(buildConfiguration) --logger trx
     dotnet publish --configuration $(buildConfiguration) --output $BUILD_ARTIFACTSTAGINGDIRECTORY
+
+- task: NuGetCommand@2
+  inputs:
+    command: pack
+    packagesToPack: 'src/**/*.csproj'
+    
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
