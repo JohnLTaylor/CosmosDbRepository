@@ -66,10 +66,18 @@ namespace DocDbRepo.Implementation
 
             var indexingPolicy = new IndexingPolicy
             {
-                IncludedPaths = (_includePaths?.Any() ?? false) ? new Collection<IncludedPath>(_includePaths) : null,
-                ExcludedPaths = (_excludePaths?.Any() ?? false) ? new Collection<ExcludedPath>(_excludePaths) : null,
                 IndexingMode = _indexingMode
             };
+
+            if (_includePaths.Any())
+            {
+                indexingPolicy.IncludedPaths = new Collection<IncludedPath>(_includePaths);
+            }
+
+            if (_excludePaths.Any())
+            {
+                indexingPolicy.ExcludedPaths = new Collection<ExcludedPath>(_excludePaths);
+            }
 
             return new DbCollection<T>(client, documentDb, Id, indexingPolicy);
         }
