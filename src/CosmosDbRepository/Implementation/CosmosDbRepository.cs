@@ -11,21 +11,22 @@ using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace DocDbRepo.Implementation
+namespace CosmosDbRepository.Implementation
 {
-    internal class DbCollection<T>
-        : IDbCollection<T>
+    internal class CosmosDbRepository<T>
+        : ICosmosDbRepository<T>
     {
         private readonly IDocumentClient _client;
-        private readonly IDocumentDb _documentDb;
+        private readonly ICosmosDb _documentDb;
         private readonly IndexingPolicy _indexingPolicy;
         private readonly FeedOptions _defaultFeedOptions;
         private AsyncLazy<DocumentCollection> _collection;
         private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
 
         public string Id { get; }
+        public Type Type => typeof(T);
 
-        public DbCollection(IDocumentClient client, IDocumentDb documentDb, string id, IndexingPolicy indexingPolicy)
+        public CosmosDbRepository(IDocumentClient client, ICosmosDb documentDb, string id, IndexingPolicy indexingPolicy)
         {
             _documentDb = documentDb;
             _client = client;
@@ -86,6 +87,8 @@ namespace DocDbRepo.Implementation
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .ConditionalWhere(() => predicate != null, predicate)
+                .Skip(1)
+                .Take(100)
                 .AsDocumentQuery();
 
             var result = new List<T>();

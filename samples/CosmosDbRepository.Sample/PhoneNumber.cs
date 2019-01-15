@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace DocDbRepo.Sample
+namespace CosmosDbRepository.Sample
 {
     public class PhoneNumber
     {

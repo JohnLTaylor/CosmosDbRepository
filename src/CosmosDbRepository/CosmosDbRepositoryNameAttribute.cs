@@ -1,14 +1,14 @@
 ﻿using System;
 
-namespace DocDbRepo
+namespace CosmosDbRepository
 {
     [AttributeUsage(validOn: AttributeTargets.Class)]
-    public class DocumentCollectionNameAttribute
+    public class CosmosDbRepositoryNameAttribute
         : Attribute
     {
         public string Name { get; }
 
-        public DocumentCollectionNameAttribute(string name)
+        public CosmosDbRepositoryNameAttribute(string name)
         {
             Name = name;
         }

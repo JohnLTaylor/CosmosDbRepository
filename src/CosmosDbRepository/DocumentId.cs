@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DocDbRepo
+namespace CosmosDbRepository
 {
     public struct DocumentId
     {

@@ -4,15 +4,16 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace DocDbRepo
+namespace CosmosDbRepository
 {
-    public interface IDbCollection
+    public interface ICosmosDbRepository
     {
         string Id { get; }
+        Type Type { get; }
     }
 
-    public interface IDbCollection<T>
-        : IDbCollection
+    public interface ICosmosDbRepository<T>
+        : ICosmosDbRepository
     {
         Task<T> AddAsync(T entity, RequestOptions requestOptions = null);
         Task<T> GetAsync(T entity, RequestOptions requestOptions = null);

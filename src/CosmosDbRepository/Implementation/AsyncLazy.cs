@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace DocDbRepo.Implementation
+namespace CosmosDbRepository.Implementation
 {
     internal class AsyncLazy<T> : Lazy<Task<T>>
     {

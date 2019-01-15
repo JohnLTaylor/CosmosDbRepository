@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DocDbRepo\DocDbRepo.csproj" />
+    <ProjectReference Include="..\..\src\CosmosDbRepository\CosmosDbRepository.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,10 +5,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
-namespace DocDbRepo.Implementation
+namespace CosmosDbRepository.Implementation
 {
-    internal class DbCollectionBuilder<T>
-        : IDbCollectionBuilder
+    internal class CosmosDbRepositoryBuilder<T>
+        : ICosmosDbRepositoryBuilder
     {
         private List<IncludedPath> _includePaths = new List<IncludedPath>();
         private List<ExcludedPath> _excludePaths = new List<ExcludedPath>();
@@ -16,13 +16,13 @@ namespace DocDbRepo.Implementation
 
         public string Id { get; private set; }
 
-        public IDbCollectionBuilder WithId(string id)
+        public ICosmosDbRepositoryBuilder WithId(string id)
         {
             Id = id;
             return this;
         }
 
-        public IDbCollectionBuilder IncludeIndexPath(string path, params Index[] indexes)
+        public ICosmosDbRepositoryBuilder IncludeIndexPath(string path, params Index[] indexes)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -40,7 +40,7 @@ namespace DocDbRepo.Implementation
             return this;
         }
 
-        public IDbCollectionBuilder ExcludeIndexPath(params string[] paths)
+        public ICosmosDbRepositoryBuilder ExcludeIndexPath(params string[] paths)
         {
             if (paths == null)
             {
@@ -60,7 +60,7 @@ namespace DocDbRepo.Implementation
             return this;
         }
 
-        public IDbCollection Build(IDocumentClient client, IDocumentDb documentDb)
+        public ICosmosDbRepository Build(IDocumentClient client, ICosmosDb documentDb)
         {
             if (string.IsNullOrWhiteSpace(Id)) throw new InvalidOperationException("Id not specified");
 
@@ -79,7 +79,7 @@ namespace DocDbRepo.Implementation
                 indexingPolicy.ExcludedPaths = new Collection<ExcludedPath>(_excludePaths);
             }
 
-            return new DbCollection<T>(client, documentDb, Id, indexingPolicy);
+            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy);
         }
     }
 }

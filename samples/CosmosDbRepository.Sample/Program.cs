@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DocDbRepo.Sample
+namespace CosmosDbRepository.Sample
 {
     public class Program
     {
@@ -34,7 +34,7 @@ namespace DocDbRepo.Sample
             var client = new DocumentClient(new Uri(clientSettings.EndpointUrl), clientSettings.AuthorizationKey, clientSettings.ConnectionPolicy);
 
             // Run demo
-            var documentDb = new DocumentDbBuilder()
+            var documentDb = new CosmosDbBuilder()
                 .WithId("Demo")
                 .AddCollection<Person>(func: cb =>
                 {
@@ -69,6 +69,10 @@ namespace DocDbRepo.Sample
             matt = await repo.UpsertAsync(matt);
 
             matt = await repo.GetAsync(matt);
+
+            var mod = matt.Modified;
+
+            var matt2 = await repo.FindAsync(r => r.Modified == mod);
 
             matt = await repo.ReplaceAsync(matt);
             await repo.RemoveAsync(matt);

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace DocDbRepo.Implementation
+namespace CosmosDbRepository.Implementation
 {
     internal static class ObjectExtensions
     {

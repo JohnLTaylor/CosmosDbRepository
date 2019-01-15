@@ -4,19 +4,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 
-namespace DocDbRepo.Implementation
+namespace CosmosDbRepository.Implementation
 {
-    internal class DocumentDb
-        : IDocumentDb
+    internal class CosmosDb
+        : ICosmosDb
     {
         private readonly IDocumentClient _client;
         private readonly AsyncLazy<Database> _database;
         private readonly string _id;
-        private readonly Dictionary<string, IDbCollection> _collections;
+        private readonly List<ICosmosDbRepository> _repositories;
 
-        Task<string> IDocumentDb.SelfLinkAsync => SelfLinkAsync();
+        Task<string> ICosmosDb.SelfLinkAsync => SelfLinkAsync();
 
-        public DocumentDb(IDocumentClient client, string databaseId, IEnumerable<IDbCollectionBuilder> collections)
+        public CosmosDb(IDocumentClient client, string databaseId, IEnumerable<ICosmosDbRepositoryBuilder> repositories)
         {
             if (string.IsNullOrWhiteSpace(databaseId))
             {
@@ -27,14 +27,19 @@ namespace DocDbRepo.Implementation
             _id = databaseId;
 
             _database = new AsyncLazy<Database>(() => GetOrCreateDatabaseAsync());
-            _collections = collections.Select(cb => cb.Build(_client, this)).ToDictionary(c => c.Id);
+            _repositories = repositories.Select(cb => cb.Build(_client, this)).ToList();
         }
 
         public async Task<string> SelfLinkAsync() => (await _database).SelfLink;
 
-        public IDbCollection<T> Repository<T>(string name = null)
+        public ICosmosDbRepository<T> Repository<T>(string name)
         {
-            return (IDbCollection<T>)_collections[GetCollectionName<T>(name)];
+            return (ICosmosDbRepository<T>)_repositories.First(r => r.Id == name);
+        }
+
+        public ICosmosDbRepository<T> Repository<T>()
+        {
+            return (ICosmosDbRepository<T>)_repositories.First(r => r.Type == typeof(T));
         }
 
         private async Task<Database> GetOrCreateDatabaseAsync()
@@ -51,7 +56,7 @@ namespace DocDbRepo.Implementation
             if (name != null)
                 return name;
 
-            var attrib = typeof(T).GetCustomAttributes(false).OfType<DocumentCollectionNameAttribute>().SingleOrDefault();
+            var attrib = typeof(T).GetCustomAttributes(false).OfType<CosmosDbRepositoryNameAttribute>().SingleOrDefault();
 
             return attrib?.Name ?? typeof(T).Name;
         }

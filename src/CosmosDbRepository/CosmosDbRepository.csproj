@@ -5,7 +5,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>John Taylor</Authors>
     <PackageProjectUrl>https://github.com/JohnLTaylor/DocumentDBRepo</PackageProjectUrl>
-    <AssemblyName>DocDbRepo</AssemblyName>
+    <AssemblyName>CosmosDbRepository</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
