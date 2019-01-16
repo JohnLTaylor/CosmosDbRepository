@@ -87,27 +87,24 @@ namespace CosmosDbRepository.Implementation
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .ConditionalWhere(() => predicate != null, predicate)
-                .Skip(1)
-                .Take(100)
                 .AsDocumentQuery();
 
-            var result = new List<T>();
-            string continuationToken = null;
+            var result = new CosmosDbRepositoryResults<T>();
             int pageSize = feedOptions?.MaxItemCount ?? 0;
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<T>().ConfigureAwait(true);
-                result.AddRange(response);
+                result.Items.AddRange(response);
 
-                if (pageSize > 0 && result.Count >= pageSize)
+                if (pageSize > 0 && result.Items.Count >= pageSize)
                 {
-                    continuationToken = response.ResponseContinuation;
+                    result.ContinuationToken = response.ResponseContinuation;
                     break;
                 }
             }
 
-            return new CosmosDbRepositoryResults<T>{ Results = result, ContinuationToken = continuationToken};
+            return result;
         }
 
         public async Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)

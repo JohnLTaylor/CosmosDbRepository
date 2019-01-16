@@ -8,10 +8,10 @@ namespace CosmosDbRepository
     {
         public string ContinuationToken { get; set; }
 
-        public List<T> Results { get; set; }
+        public List<T> Items { get; set; } = new List<T>();
 
-        public IEnumerator<T> GetEnumerator() => Results.GetEnumerator();
+        public IEnumerator<T> GetEnumerator() => Items.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() => Results.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
     }
 }
