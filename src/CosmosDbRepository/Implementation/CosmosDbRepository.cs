@@ -82,7 +82,7 @@ namespace CosmosDbRepository.Implementation
             return JsonConvert.DeserializeObject<T>(response.Resource.ToString());
         }
 
-        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<CosmosDbRepositoryResults<T>> FindAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
         {
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
@@ -92,14 +92,22 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var result = new List<T>();
+            string continuationToken = null;
+            int pageSize = feedOptions?.MaxItemCount ?? 0;
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<T>().ConfigureAwait(true);
                 result.AddRange(response);
+
+                if (pageSize > 0 && result.Count >= pageSize)
+                {
+                    continuationToken = response.ResponseContinuation;
+                    break;
+                }
             }
 
-            return result;
+            return new CosmosDbRepositoryResults<T>{ Results = result, ContinuationToken = continuationToken};
         }
 
         public async Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
