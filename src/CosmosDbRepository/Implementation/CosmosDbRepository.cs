@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Documents;
+﻿using CosmosDbRepository.Types;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
 using Newtonsoft.Json;
@@ -82,15 +83,37 @@ namespace CosmosDbRepository.Implementation
             return JsonConvert.DeserializeObject<T>(response.Resource.ToString());
         }
 
-        public async Task<CosmosDbRepositoryResults<T>> FindAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
         {
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .ConditionalWhere(() => predicate != null, predicate)
                 .AsDocumentQuery();
 
-            var result = new CosmosDbRepositoryResults<T>();
-            int pageSize = feedOptions?.MaxItemCount ?? 0;
+            var results = new List<T>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<T>().ConfigureAwait(true);
+                results.AddRange(response);
+            }
+
+            return results;
+        }
+
+        public async Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
+        {
+            feedOptions = feedOptions.ShallowCopy() ?? new FeedOptions();
+
+            feedOptions.RequestContinuation = continuationToken;
+            feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
+                .ConditionalWhere(() => predicate != null, predicate)
+                .AsDocumentQuery();
+
+            var result = new CosmosDbRepositoryPagedResults<T>();
 
             while (query.HasMoreResults)
             {

@@ -1,5 +1,7 @@
-﻿using Microsoft.Azure.Documents.Client;
+﻿using CosmosDbRepository.Types;
+using Microsoft.Azure.Documents.Client;
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -17,7 +19,8 @@ namespace CosmosDbRepository
         Task<T> AddAsync(T entity, RequestOptions requestOptions = null);
         Task<T> GetAsync(T entity, RequestOptions requestOptions = null);
         Task<T> GetAsync(DocumentId itemId, RequestOptions requestOptions = null);
-        Task<CosmosDbRepositoryResults<T>> FindAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null);
+        Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null);
+        Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null);
         Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null);
         Task<T> UpsertAsync(T entity, RequestOptions requestOptions = null);
         Task<T> ReplaceAsync(T entity, RequestOptions requestOptions = null);
