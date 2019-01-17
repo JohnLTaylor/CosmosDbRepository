@@ -21,11 +21,11 @@ namespace CosmosDbRepository
         Task<T> GetAsync(DocumentId itemId, RequestOptions requestOptions = null);
         Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null);
         Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null);
-        Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null);
+        Task<T> FindFirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null);
         Task<T> UpsertAsync(T entity, RequestOptions requestOptions = null);
         Task<T> ReplaceAsync(T entity, RequestOptions requestOptions = null);
-        Task<bool> RemoveAsync(DocumentId itemId, RequestOptions requestOptions = null);
-        Task<bool> RemoveAsync(T entity, RequestOptions requestOptions = null);
+        Task<bool> DeleteDocument(DocumentId itemId, RequestOptions requestOptions = null);
+        Task<bool> DeleteDocument(T entity, RequestOptions requestOptions = null);
         Task<bool> DeleteAsync(RequestOptions requestOptions = null);
     }
 }

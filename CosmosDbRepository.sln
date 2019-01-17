@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C59B0623-A1B3-40CF-8BEE-C6B8D5EA0A9C}"
 	ProjectSection(SolutionItems) = preProject
 		azure-pipelines.yml = azure-pipelines.yml
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDbRepository.Sample", "samples\CosmosDbRepository.Sample\CosmosDbRepository.Sample.csproj", "{22952F0E-2F0F-4488-B608-38F3D9EF496C}"

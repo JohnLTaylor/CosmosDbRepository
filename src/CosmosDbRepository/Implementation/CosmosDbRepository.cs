@@ -130,7 +130,7 @@ namespace CosmosDbRepository.Implementation
             return result;
         }
 
-        public async Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<T> FindFirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
         {
             feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
             feedOptions.MaxItemCount = 1;
@@ -205,7 +205,7 @@ namespace CosmosDbRepository.Implementation
             return result;
         }
 
-        public async Task<bool> RemoveAsync(DocumentId itemId, RequestOptions requestOptions = null)
+        public async Task<bool> DeleteDocument(DocumentId itemId, RequestOptions requestOptions = null)
         {
             var documentLink = $"{(await _collection).AltLink}/docs/{Uri.EscapeUriString(itemId.Id)}";
 
@@ -214,7 +214,7 @@ namespace CosmosDbRepository.Implementation
 
         }
 
-        public async Task<bool> RemoveAsync(T entity, RequestOptions requestOptions = null)
+        public async Task<bool> DeleteDocument(T entity, RequestOptions requestOptions = null)
         {
             (string id, string eTag) = GetIdAndETag(entity);
 

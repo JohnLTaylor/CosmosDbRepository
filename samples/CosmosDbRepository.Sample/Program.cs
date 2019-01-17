@@ -75,7 +75,7 @@ namespace CosmosDbRepository.Sample
             var matt2 = await repo.FindAsync(r => r.Modified == mod);
 
             matt = await repo.ReplaceAsync(matt);
-            await repo.RemoveAsync(matt);
+            await repo.DeleteDocument(matt);
 
             // create another person
             Person jack = new Person
@@ -109,7 +109,7 @@ namespace CosmosDbRepository.Sample
             Console.WriteLine("GetByIdAsync result: " + justMatt);
 
             // ... or by his first name
-            Person firstMatt = await repo.FirstOrDefaultAsync(p => p.FirstName.ToLower() == "matt");
+            Person firstMatt = await repo.FindFirstOrDefaultAsync(p => p.FirstName.ToLower() == "matt");
             Console.WriteLine("First: " + firstMatt);
 
             // query all the smiths
@@ -134,10 +134,10 @@ namespace CosmosDbRepository.Sample
             Console.ReadKey(true);
 
             // remove matt from collection
-            await repo.RemoveAsync(matt.FullName);
+            await repo.DeleteDocument(matt.FullName);
 
             // remove jack from collection
-            await repo.RemoveAsync(jack.FullName);
+            await repo.DeleteDocument(jack.FullName);
 
             // should output nothing
             PrintPersonCollection(await repo.FindAsync());
