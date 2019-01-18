@@ -24,7 +24,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TResult>
+        , IStoredProcedure<TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -40,7 +40,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam, TResult>
+        , IStoredProcedure<TParam, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -56,7 +56,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TResult>
+        , IStoredProcedure<TParam1, TParam2, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -72,7 +72,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -88,7 +88,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -104,7 +104,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -120,7 +120,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -136,7 +136,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -152,7 +152,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -168,7 +168,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -184,7 +184,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -200,7 +200,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -216,7 +216,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -232,7 +232,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -248,7 +248,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -264,7 +264,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
@@ -280,7 +280,7 @@ namespace CosmosDbRepository.Implementation
 
     internal class StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>
         : StoreProcedureImpl
-        , IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>
+        , IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>
     {
         public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id)
             : base(client, repository, id)
