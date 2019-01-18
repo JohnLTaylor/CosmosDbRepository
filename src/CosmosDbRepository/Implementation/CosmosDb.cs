@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 
 namespace CosmosDbRepository.Implementation
 {
@@ -40,6 +42,12 @@ namespace CosmosDbRepository.Implementation
         public ICosmosDbRepository<T> Repository<T>()
         {
             return (ICosmosDbRepository<T>)_repositories.First(r => r.Type == typeof(T));
+        }
+
+        public async Task<bool> DeleteAsync(RequestOptions options = null)
+        {
+            var response = await _client.DeleteDatabaseAsync(await SelfLinkAsync(), options);
+            return response.StatusCode == HttpStatusCode.NoContent;
         }
 
         private async Task<Database> GetOrCreateDatabaseAsync()

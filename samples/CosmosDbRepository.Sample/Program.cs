@@ -41,12 +41,40 @@ namespace CosmosDbRepository.Sample
                     cb
                         .IncludeIndexPath("/*", Index.Range(DataType.Number), Index.Hash(DataType.String, 3), Index.Spatial(DataType.Point))
                         .IncludeIndexPath("/Birthday/?", Index.Range(DataType.Number))
-                        .ExcludeIndexPath("/FirstName/?", "/LastName/?");
+                        .ExcludeIndexPath("/FirstName/?", "/LastName/?")
+                        .StoredProcedure("test",
+@"// SAMPLE STORED PROCEDURE
+function sample() {
+    var collection = getContext().getCollection();
+
+    // Query documents and take 1st item.
+    var isAccepted = collection.queryDocuments(
+        collection.getSelfLink(),
+        'SELECT * FROM root r',
+    function (err, feed, options) {
+        if (err) throw err;
+
+        // Check the feed and if empty, set the body to 'no docs found', 
+        // else take 1st element from feed
+        if (!feed || !feed.length) {
+            var response = getContext().getResponse();
+            response.setBody('no docs found');
+        }
+        else {
+            var response = getContext().getResponse();
+            response.setBody(JSON.stringify(feed));
+        }
+    });
+
+    if (!isAccepted) throw new Error('The query was not accepted by the server.');
+}");
                 })
                 .Build(client);
 
             // create repository for persons and set Person.FullName property as identity field (overriding default Id property name)
             var repo = documentDb.Repository<Person>();
+
+            var sp = repo.StoredProcedure<Person[]>("test");
 
             // output all persons in our database, nothing there yet
             PrintPersonCollection(await repo.FindAsync());
@@ -75,7 +103,7 @@ namespace CosmosDbRepository.Sample
             var matt2 = await repo.FindAsync(r => r.Modified == mod);
 
             matt = await repo.ReplaceAsync(matt);
-            await repo.DeleteDocument(matt);
+            await repo.DeleteDocumentAsync(matt);
 
             // create another person
             Person jack = new Person
@@ -131,19 +159,23 @@ namespace CosmosDbRepository.Sample
             // count all jacks
             var jacksCount = await repo.FindAsync(p => p.FirstName == "Jack");
 
+            PrintPersonCollection(await sp.ExecuteAsync());
+
             Console.ReadKey(true);
 
             // remove matt from collection
-            await repo.DeleteDocument(matt.FullName);
+            await repo.DeleteDocumentAsync(matt.FullName);
 
             // remove jack from collection
-            await repo.DeleteDocument(jack.FullName);
+            await repo.DeleteDocumentAsync(jack.FullName);
 
             // should output nothing
             PrintPersonCollection(await repo.FindAsync());
 
             // remove collection
             await repo.DeleteAsync();
+
+            await documentDb.DeleteAsync();
 
             Console.ReadKey(true);
         }

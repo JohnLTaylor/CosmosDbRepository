@@ -12,6 +12,7 @@ namespace CosmosDbRepository.Implementation
     {
         private List<IncludedPath> _includePaths = new List<IncludedPath>();
         private List<ExcludedPath> _excludePaths = new List<ExcludedPath>();
+        private List<StoredProcedure> _storedProcedure = new List<StoredProcedure>();
         private IndexingMode _indexingMode = IndexingMode.Consistent;
 
         public string Id { get; private set; }
@@ -60,6 +61,12 @@ namespace CosmosDbRepository.Implementation
             return this;
         }
 
+        public ICosmosDbRepositoryBuilder StoredProcedure(string id, string body)
+        {
+            _storedProcedure.Add(new StoredProcedure { Id = id, Body = body });
+            return this;
+        }
+
         public ICosmosDbRepository Build(IDocumentClient client, ICosmosDb documentDb)
         {
             if (string.IsNullOrWhiteSpace(Id)) throw new InvalidOperationException("Id not specified");
@@ -79,7 +86,7 @@ namespace CosmosDbRepository.Implementation
                 indexingPolicy.ExcludedPaths = new Collection<ExcludedPath>(_excludePaths);
             }
 
-            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy);
+            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, _storedProcedure);
         }
     }
 }

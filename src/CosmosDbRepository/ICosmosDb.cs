@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using Microsoft.Azure.Documents.Client;
+using System.Threading.Tasks;
 
 namespace CosmosDbRepository
 {
@@ -7,5 +8,6 @@ namespace CosmosDbRepository
         Task<string> SelfLinkAsync { get; }
         ICosmosDbRepository<T> Repository<T>();
         ICosmosDbRepository<T> Repository<T>(string id);
+        Task<bool> DeleteAsync(RequestOptions options = null);
     }
 }

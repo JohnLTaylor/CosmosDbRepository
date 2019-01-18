@@ -21,18 +21,21 @@ namespace CosmosDbRepository.Implementation
         private readonly ICosmosDb _documentDb;
         private readonly IndexingPolicy _indexingPolicy;
         private readonly FeedOptions _defaultFeedOptions;
+        private readonly List<StoredProcedure> _storedProcedures;
         private AsyncLazy<DocumentCollection> _collection;
         private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
 
         public string Id { get; }
         public Type Type => typeof(T);
+        public Task<string> AltLink => GetAltLink();
 
-        public CosmosDbRepository(IDocumentClient client, ICosmosDb documentDb, string id, IndexingPolicy indexingPolicy)
+        public CosmosDbRepository(IDocumentClient client, ICosmosDb documentDb, string id, IndexingPolicy indexingPolicy, IEnumerable<StoredProcedure> storedProcedures)
         {
             _documentDb = documentDb;
             _client = client;
             Id = id;
             _indexingPolicy = indexingPolicy;
+            _storedProcedures = new List<StoredProcedure>(storedProcedures);
 
             _defaultFeedOptions = new FeedOptions
             {
@@ -205,7 +208,7 @@ namespace CosmosDbRepository.Implementation
             return result;
         }
 
-        public async Task<bool> DeleteDocument(DocumentId itemId, RequestOptions requestOptions = null)
+        public async Task<bool> DeleteDocumentAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
             var documentLink = $"{(await _collection).AltLink}/docs/{Uri.EscapeUriString(itemId.Id)}";
 
@@ -214,7 +217,7 @@ namespace CosmosDbRepository.Implementation
 
         }
 
-        public async Task<bool> DeleteDocument(T entity, RequestOptions requestOptions = null)
+        public async Task<bool> DeleteDocumentAsync(T entity, RequestOptions requestOptions = null)
         {
             (string id, string eTag) = GetIdAndETag(entity);
 
@@ -238,9 +241,40 @@ namespace CosmosDbRepository.Implementation
             return response.StatusCode == HttpStatusCode.NoContent;
         }
 
+        public IStoreProcedure<TResult> StoredProcedure<TResult>(string id) => new StoreProcedureImpl<TResult>(_client, this, id);
+        public IStoreProcedure<TParam,TResult> StoredProcedure<TParam,TResult>(string id) => new StoreProcedureImpl<TParam,TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TResult> StoredProcedure<TParam1, TParam2, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TResult> StoredProcedure<TParam1, TParam2, TParam3,TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(_client, this, id);
+        public IStoreProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(_client, this, id);
+
+
         private async Task<DocumentCollection> GetOrCreateCollectionAsync()
         {
-            return await _client.CreateDocumentCollectionIfNotExistsAsync(await _documentDb.SelfLinkAsync, new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy });
+            var resourceResponse = await _client.CreateDocumentCollectionIfNotExistsAsync(await _documentDb.SelfLinkAsync, new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy });
+
+            if (_storedProcedures.Any())
+            {
+                var sps = (await _client.ReadStoredProcedureFeedAsync(resourceResponse.Resource.StoredProceduresLink)).ToArray();
+
+                foreach(var sp in _storedProcedures.Where(sp => sps.FirstOrDefault(p => p.Id == sp.Id)?.Body != sp.Body))
+                {
+                    await _client.UpsertStoredProcedureAsync(resourceResponse.Resource.AltLink, sp);
+                }
+            }
+
+            return resourceResponse;
         }
 
         private (string id, string eTag) GetIdAndETag(T entity)
@@ -284,6 +318,11 @@ namespace CosmosDbRepository.Implementation
             }
 
             return _idETagHelper.GetOrAdd(entity.GetType(), Factory)(entity);
+        }
+
+        private async Task<String> GetAltLink()
+        {
+            return (await _collection).AltLink;
         }
     }
 }
