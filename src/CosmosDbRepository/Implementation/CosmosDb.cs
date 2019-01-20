@@ -50,6 +50,16 @@ namespace CosmosDbRepository.Implementation
             return response.StatusCode == HttpStatusCode.NoContent;
         }
 
+        public async Task Init()
+        {
+            await _database;
+
+            foreach (var repo in _repositories)
+            {
+                await repo.Init();
+            }
+        }
+
         private async Task<Database> GetOrCreateDatabaseAsync()
         {
             var database = _client.CreateDatabaseQuery().Where(db => db.Id == _id).AsEnumerable().FirstOrDefault();

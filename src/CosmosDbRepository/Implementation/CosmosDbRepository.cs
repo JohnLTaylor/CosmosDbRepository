@@ -241,6 +241,8 @@ namespace CosmosDbRepository.Implementation
             return response.StatusCode == HttpStatusCode.NoContent;
         }
 
+        public Task Init() => _collection.Value;
+
         public IStoredProcedure<TResult> StoredProcedure<TResult>(string id) => new StoreProcedureImpl<TResult>(_client, this, id);
         public IStoredProcedure<TParam,TResult> StoredProcedure<TParam,TResult>(string id) => new StoreProcedureImpl<TParam,TResult>(_client, this, id);
         public IStoredProcedure<TParam1, TParam2, TResult> StoredProcedure<TParam1, TParam2, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TResult>(_client, this, id);

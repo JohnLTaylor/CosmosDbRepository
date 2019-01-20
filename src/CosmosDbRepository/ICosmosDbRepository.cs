@@ -12,6 +12,7 @@ namespace CosmosDbRepository
         string Id { get; }
         Type Type { get; }
         Task<string> AltLink { get; }
+        Task Init();
     }
 
     public interface ICosmosDbRepository<T>

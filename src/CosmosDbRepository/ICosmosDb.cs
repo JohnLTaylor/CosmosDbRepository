@@ -9,5 +9,9 @@ namespace CosmosDbRepository
         ICosmosDbRepository<T> Repository<T>();
         ICosmosDbRepository<T> Repository<T>(string id);
         Task<bool> DeleteAsync(RequestOptions options = null);
+
+        // If you do not call init then the database and repositories
+        // will be constructed as needed
+        Task Init();
     }
 }
