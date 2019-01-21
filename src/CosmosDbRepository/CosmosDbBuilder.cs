@@ -9,7 +9,7 @@ namespace CosmosDbRepository
     public class CosmosDbBuilder
         : ICosmosDbBuilder
     {
-        private Dictionary<string, ICosmosDbRepositoryBuilder> _collectionBuilders = new Dictionary<string, ICosmosDbRepositoryBuilder>(StringComparer.OrdinalIgnoreCase);
+        private List<ICosmosDbRepositoryBuilder> _collectionBuilders = new List<ICosmosDbRepositoryBuilder>();
 
         public string Id { get; private set; }
 
@@ -37,7 +37,7 @@ namespace CosmosDbRepository
             var builder = new CosmosDbRepositoryBuilder<T>()
                 .WithId(id);
 
-            _collectionBuilders.Add(id, builder);
+            _collectionBuilders.Add(builder);
 
             func?.Invoke(builder);
 
@@ -48,7 +48,7 @@ namespace CosmosDbRepository
         {
             if (string.IsNullOrWhiteSpace(Id)) throw new InvalidOperationException("Id not specified");
 
-            var documentDb = new CosmosDb(client, Id, _collectionBuilders.Values);
+            var documentDb = new CosmosDb(client, Id, _collectionBuilders);
 
             return documentDb;
         }
