@@ -106,7 +106,7 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
         {
-            feedOptions = feedOptions.ShallowCopy() ?? new FeedOptions();
+            feedOptions = feedOptions?.ShallowCopy() ?? new FeedOptions();
 
             feedOptions.RequestContinuation = continuationToken;
             feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
