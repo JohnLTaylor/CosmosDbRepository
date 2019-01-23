@@ -86,11 +86,12 @@ namespace CosmosDbRepository.Implementation
             return JsonConvert.DeserializeObject<T>(response.Resource.ToString());
         }
 
-        public async Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
-                .ConditionalWhere(() => predicate != null, predicate)
+                .ConditionalWhere(predicate)
+                .ApplyClauses(clauses)
                 .AsDocumentQuery();
 
             var results = new List<T>();
@@ -104,7 +105,7 @@ namespace CosmosDbRepository.Implementation
             return results;
         }
 
-        public async Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = feedOptions?.ShallowCopy() ?? new FeedOptions();
 
@@ -113,7 +114,8 @@ namespace CosmosDbRepository.Implementation
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
-                .ConditionalWhere(() => predicate != null, predicate)
+                .ConditionalWhere(predicate)
+                .ApplyClauses(clauses)
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<T>();
@@ -133,14 +135,15 @@ namespace CosmosDbRepository.Implementation
             return result;
         }
 
-        public async Task<T> FindFirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, FeedOptions feedOptions = null)
+        public async Task<T> FindFirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
             feedOptions.MaxItemCount = 1;
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
-                .ConditionalWhere(() => predicate != null, predicate)
+                .ConditionalWhere(predicate)
+                .ApplyClauses(clauses)
                 .AsDocumentQuery();
 
             T result = default(T);

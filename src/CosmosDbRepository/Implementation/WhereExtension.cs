@@ -6,11 +6,19 @@ namespace CosmosDbRepository.Implementation
 {
     internal static class WhereExtension
     {
-        public static IQueryable<TSource> ConditionalWhere<TSource>(this IQueryable<TSource> source, Func<bool> condition, Expression<Func<TSource, bool>> predicate)
+        public static IQueryable<TSource> ConditionalWhere<TSource>(this IQueryable<TSource> source, Expression<Func<TSource, bool>> predicate)
         {
-            return (condition?.Invoke() ?? throw new ArgumentNullException(nameof(condition)))
-                ? source.Where(predicate ?? throw new ArgumentNullException(nameof(predicate)))
+            return (predicate != null)
+                ? source.Where(predicate)
                 : source;
         }
+
+        public static IQueryable<TSource> ApplyClauses<TSource>(this IQueryable<TSource> source, Func<IQueryable<TSource>, IQueryable<TSource>> clauses)
+        {
+            return (clauses != null)
+                ? clauses.Invoke(source)
+                : source;
+        }
+
     }
 }
