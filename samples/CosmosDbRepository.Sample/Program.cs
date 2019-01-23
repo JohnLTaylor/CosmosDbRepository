@@ -62,7 +62,7 @@ function sample() {
         }
         else {
             var response = getContext().getResponse();
-            response.setBody(JSON.stringify(feed));
+            response.setBody(feed);
         }
     });
 
