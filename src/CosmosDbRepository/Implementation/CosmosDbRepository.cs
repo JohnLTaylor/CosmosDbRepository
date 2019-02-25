@@ -135,6 +135,14 @@ namespace CosmosDbRepository.Implementation
             return result;
         }
 
+        public async Task<int> CountAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
+        {
+            return await _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
+                .ConditionalWhere(predicate)
+                .ApplyClauses(clauses)
+                .CountAsync();
+        }
+
         public async Task<T> FindFirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
