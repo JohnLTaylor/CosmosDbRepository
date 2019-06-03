@@ -49,7 +49,7 @@ namespace CosmosDbRepository.Implementation
         public async Task<T> AddAsync(T entity, RequestOptions requestOptions = null)
         {
             requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings ?? JsonConvert.DefaultSettings();
+            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
             var addedDoc = await _client.CreateDocumentAsync((await _collection).SelfLink, entity, requestOptions);
             return JsonConvert.DeserializeObject<T>(addedDoc.Resource.ToString());
         }
@@ -59,7 +59,7 @@ namespace CosmosDbRepository.Implementation
             (string id, string eTag) = GetIdAndETag(entity);
 
             requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings ?? JsonConvert.DefaultSettings();
+            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
 
             if (eTag != null)
             {
@@ -80,7 +80,7 @@ namespace CosmosDbRepository.Implementation
             (string id, string eTag) = GetIdAndETag(entity);
 
             requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings ?? JsonConvert.DefaultSettings();
+            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
 
             if (eTag != null)
             {
@@ -176,7 +176,7 @@ namespace CosmosDbRepository.Implementation
             (string id, string eTag) = GetIdAndETag(entity);
 
             requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings ?? JsonConvert.DefaultSettings();
+            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
 
             if (eTag != null)
             {
@@ -214,7 +214,7 @@ namespace CosmosDbRepository.Implementation
             try
             {
                 requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-                requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings ?? JsonConvert.DefaultSettings();
+                requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
                 var response = await _client.ReadDocumentAsync<T>(documentLink, requestOptions);
                 result = response.Document;
             }

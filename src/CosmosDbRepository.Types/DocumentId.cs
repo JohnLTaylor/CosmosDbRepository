@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace CosmosDbRepository.Types
 {
+    [JsonConverter(typeof(DocumentIdJsonConverter))]
     public struct DocumentId : IEquatable<DocumentId>
     {
         public string Id { get; }
