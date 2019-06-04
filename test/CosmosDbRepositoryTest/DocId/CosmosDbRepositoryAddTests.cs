@@ -20,7 +20,7 @@ namespace CosmosDbRepositoryTest.DocId
             {
                 var data = new TestData<DocumentId>
                 {
-                    Id = 1,
+                    Id = (int)DateTime.Now.Ticks,
                     Data = "My Data"
                 };
 
@@ -35,7 +35,7 @@ namespace CosmosDbRepositoryTest.DocId
             {
                 var data = new TestData<DocumentId>
                 {
-                    Id = 1,
+                    Id = (int)DateTime.Now.Ticks,
                     Data = "My Data"
                 };
 
@@ -94,7 +94,7 @@ namespace CosmosDbRepositoryTest.DocId
             {
                 var data = new TestData<DocumentId>
                 {
-                    Id = "MyId",
+                    Id = $"MyId{DateTime.Now.Ticks}",
                     Data = "My Data"
                 };
 
@@ -109,7 +109,7 @@ namespace CosmosDbRepositoryTest.DocId
             {
                 var data = new TestData<DocumentId>
                 {
-                    Id = "MyId",
+                    Id = $"MyId{DateTime.Now.Ticks}",
                     Data = "My Data"
                 };
 

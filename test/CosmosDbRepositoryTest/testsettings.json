@@ -9,7 +9,8 @@
   },
   "EnvironmentConfig": {
     "DeleteDatabaseOnClose": "true",
+    "DeleteCollectionsOnClose": "false",
     "RandomizeDbName": "true",
-    "DeleteCollectionsOnClose": "true"
+    "RandomizeCollectionName": "false"
   }
 }
