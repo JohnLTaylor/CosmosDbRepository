@@ -14,11 +14,12 @@ namespace CosmosDbRepository.Implementation
         private readonly IDocumentClient _client;
         private readonly AsyncLazy<Database> _database;
         private readonly string _id;
+        private readonly int? _defaultThroughput;
         private readonly List<ICosmosDbRepository> _repositories;
 
         Task<string> ICosmosDb.SelfLinkAsync => SelfLinkAsync();
 
-        public CosmosDb(IDocumentClient client, string databaseId, IEnumerable<ICosmosDbRepositoryBuilder> repositories)
+        public CosmosDb(IDocumentClient client, string databaseId, int? defaultThroughput, IEnumerable<ICosmosDbRepositoryBuilder> repositories)
         {
             if (string.IsNullOrWhiteSpace(databaseId))
             {
@@ -27,9 +28,10 @@ namespace CosmosDbRepository.Implementation
 
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _id = databaseId;
+            _defaultThroughput = defaultThroughput;
 
             _database = new AsyncLazy<Database>(() => GetOrCreateDatabaseAsync());
-            _repositories = repositories.Select(cb => cb.Build(_client, this)).ToList();
+            _repositories = repositories.Select(cb => cb.Build(_client, this, _defaultThroughput)).ToList();
         }
 
         public async Task<string> SelfLinkAsync() => (await _database).SelfLink;

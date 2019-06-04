@@ -36,6 +36,7 @@ namespace CosmosDbRepository.Sample
             // Run demo
             var documentDb = new CosmosDbBuilder()
                 .WithId("Demo")
+                .WithDefaultThroughput(400)
                 .AddCollection<Person>(func: cb =>
                 {
                     cb

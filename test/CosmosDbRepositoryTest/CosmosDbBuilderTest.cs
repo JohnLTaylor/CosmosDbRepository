@@ -154,6 +154,7 @@ namespace CosmosDbRepositoryTest
             {
                 new CosmosDbBuilder()
                     .WithId("MyDatabase")
+                    .WithDefaultThroughput(400)
                     .AddCollection<TestData<Guid>>()
                     .Build(dbClient);
             }
@@ -168,6 +169,7 @@ namespace CosmosDbRepositoryTest
             {
                 new CosmosDbBuilder()
                     .WithId("MyDatabase")
+                    .WithDefaultThroughput(400)
                     .AddCollection<TestClass>("MyTestClass")
                     .Build(dbClient);
             }
@@ -182,6 +184,7 @@ namespace CosmosDbRepositoryTest
             {
                 new CosmosDbBuilder()
                     .WithId("MyDatabase")
+                    .WithDefaultThroughput(400)
                     .AddCollection<TestClass>("TestClass")
                     .Build(dbClient);
             }
@@ -196,6 +199,7 @@ namespace CosmosDbRepositoryTest
             {
                 new CosmosDbBuilder()
                     .WithId("MyDatabase")
+                    .WithDefaultThroughput(400)
                     .AddCollection<TestClass2>()
                     .Build(dbClient);
             }
@@ -210,6 +214,7 @@ namespace CosmosDbRepositoryTest
             {
                 var db = new CosmosDbBuilder()
                     .WithId("MyDatabase")
+                    .WithDefaultThroughput(400)
                     .AddCollection<TestClass>("MyTestClass")
                     .Build(dbClient);
 
@@ -226,6 +231,7 @@ namespace CosmosDbRepositoryTest
             {
                 var db = new CosmosDbBuilder()
                     .WithId("MyDatabase")
+                    .WithDefaultThroughput(400)
                     .AddCollection<TestClass>()
                     .Build(dbClient);
 
@@ -242,6 +248,7 @@ namespace CosmosDbRepositoryTest
             {
                 var db = new CosmosDbBuilder()
                     .WithId("MyDatabase")
+                    .WithDefaultThroughput(400)
                     .AddCollection<TestClass2>()
                     .Build(dbClient);
 

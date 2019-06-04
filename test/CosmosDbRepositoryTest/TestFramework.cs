@@ -50,7 +50,10 @@ namespace CosmosDbRepositoryTest
                     var dbConfig = Services.GetRequiredService<IOptions<CosmosDbConfig>>().Value;
 
                     var client = new DocumentClient(new Uri(dbConfig.DbEndPoint), dbConfig.DbKey);
-                    var repo = new CosmosDbBuilder().WithId(dbConfig.DbName).Build(client);
+                    var repo = new CosmosDbBuilder()
+                        .WithId(dbConfig.DbName)
+                        .WithDefaultThroughput(400)
+                        .Build(client);
 
                     repo.DeleteAsync().Wait();
                 }

@@ -21,6 +21,7 @@ namespace CosmosDbRepository.Implementation
         private readonly ICosmosDb _documentDb;
         private readonly IndexingPolicy _indexingPolicy;
         private readonly FeedOptions _defaultFeedOptions;
+        private readonly int? _throughput;
         private readonly List<StoredProcedure> _storedProcedures;
         private AsyncLazy<DocumentCollection> _collection;
         private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
@@ -29,12 +30,18 @@ namespace CosmosDbRepository.Implementation
         public Type Type => typeof(T);
         public Task<string> AltLink => GetAltLink();
 
-        public CosmosDbRepository(IDocumentClient client, ICosmosDb documentDb, string id, IndexingPolicy indexingPolicy, IEnumerable<StoredProcedure> storedProcedures)
+        public CosmosDbRepository(IDocumentClient client,
+                                  ICosmosDb documentDb,
+                                  string id,
+                                  IndexingPolicy indexingPolicy,
+                                  int? throughput,
+                                  IEnumerable<StoredProcedure> storedProcedures)
         {
             _documentDb = documentDb;
             _client = client;
             Id = id;
             _indexingPolicy = indexingPolicy;
+            _throughput = throughput;
             _storedProcedures = new List<StoredProcedure>(storedProcedures);
 
             _defaultFeedOptions = new FeedOptions
@@ -285,7 +292,10 @@ namespace CosmosDbRepository.Implementation
 
         private async Task<DocumentCollection> GetOrCreateCollectionAsync()
         {
-            var resourceResponse = await _client.CreateDocumentCollectionIfNotExistsAsync(await _documentDb.SelfLinkAsync, new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy });
+            var resourceResponse = await _client.CreateDocumentCollectionIfNotExistsAsync(
+                await _documentDb.SelfLinkAsync,
+                new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy },
+                new RequestOptions { OfferThroughput = _throughput });
 
             if (_storedProcedures.Any())
             {

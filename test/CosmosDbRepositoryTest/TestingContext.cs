@@ -33,6 +33,7 @@ namespace CosmosDbRepositoryTest
             DbClient = new DocumentClient(new Uri(DbConfig.DbEndPoint), DbConfig.DbKey);
             var builder = new CosmosDbBuilder()
                 .WithId(DbConfig.DbName)
+                .WithDefaultThroughput(400)
                 .AddCollection<T>(TestConfig.CollectionName, repoBuilderCallback);
 
             builderCallback?.Invoke(builder);

@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 
 namespace CosmosDbRepository.Implementation
 {
@@ -14,12 +13,19 @@ namespace CosmosDbRepository.Implementation
         private List<ExcludedPath> _excludePaths = new List<ExcludedPath>();
         private List<StoredProcedure> _storedProcedure = new List<StoredProcedure>();
         private IndexingMode _indexingMode = IndexingMode.Consistent;
+        private int? _throughput;
 
         public string Id { get; private set; }
 
         public ICosmosDbRepositoryBuilder WithId(string id)
         {
             Id = id;
+            return this;
+        }
+
+        public ICosmosDbRepositoryBuilder WithThroughput(int throughput)
+        {
+            _throughput = throughput;
             return this;
         }
 
@@ -67,7 +73,7 @@ namespace CosmosDbRepository.Implementation
             return this;
         }
 
-        public ICosmosDbRepository Build(IDocumentClient client, ICosmosDb documentDb)
+        public ICosmosDbRepository Build(IDocumentClient client, ICosmosDb documentDb, int? defaultThroughput)
         {
             if (string.IsNullOrWhiteSpace(Id)) throw new InvalidOperationException("Id not specified");
 
@@ -86,7 +92,7 @@ namespace CosmosDbRepository.Implementation
                 indexingPolicy.ExcludedPaths = new Collection<ExcludedPath>(_excludePaths);
             }
 
-            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, _storedProcedure);
+            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, _throughput ?? defaultThroughput, _storedProcedure);
         }
     }
 }
