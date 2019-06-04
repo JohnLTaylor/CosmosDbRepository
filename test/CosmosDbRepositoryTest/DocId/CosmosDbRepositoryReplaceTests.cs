@@ -1,3 +1,4 @@
+using CosmosDbRepository.Types;
 using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -6,46 +7,51 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace CosmosDbRepositoryTest.GuidId
+namespace CosmosDbRepositoryTest.DocId
 {
     [TestClass]
-    public class CosmosDbRepositoryAddTests
-        : CosmosDbRepositoryTests<TestData<Guid>>
+    public class CosmosDbRepositoryReplaceTests
+        : CosmosDbRepositoryTests<TestData<DocumentId>>
     {
         [TestMethod]
-        public async Task Add_Expect_Success()
+        public async Task Replace_Expect_Success()
         {
             using (var context = CreateContext())
             {
-                var data = new TestData<Guid>
+                var data = new TestData<DocumentId>
                 {
                     Id = Guid.NewGuid(),
-                    Data = "My Data"
+                    Data = "Old Data"
                 };
 
-                await context.Repo.AddAsync(data);
+                data = await context.Repo.AddAsync(data);
+
+                data.Data = "New Data";
+
+                await context.Repo.ReplaceAsync(data);
             }
         }
 
         [TestMethod]
-        public async Task Add_Expect_Conflict()
+        public async Task Replace_Expect_PreconditionFailed()
         {
             using (var context = CreateContext())
             {
-                var data = new TestData<Guid>
+                var data = new TestData<DocumentId>
                 {
                     Id = Guid.NewGuid(),
-                    Data = "My Data"
+                    Data = "Old Data"
                 };
 
-                await context.Repo.AddAsync(data);
-                var faultedTask = context.Repo.AddAsync(data);
+                data = await context.Repo.AddAsync(data);
+                await context.Repo.ReplaceAsync(data);
+                var faultedTask = context.Repo.ReplaceAsync(data);
                 await faultedTask.ShollowException();
 
                 faultedTask.IsFaulted.Should().BeTrue();
                 faultedTask.Exception.InnerExceptions.Should().HaveCount(1);
                 var dce = faultedTask.Exception.InnerExceptions.Single() as DocumentClientException;
-                dce.StatusCode.Should().Be(HttpStatusCode.Conflict);
+                dce.StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
             }
         }
     }

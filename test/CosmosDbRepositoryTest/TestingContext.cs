@@ -47,6 +47,7 @@ namespace CosmosDbRepositoryTest
             if (!_disposed && EnvConfig.DeleteCollectionsOnClose)
             {
                 Repo.DeleteAsync();
+                DbClient.Dispose();
                 _disposed = true;
             }
         }

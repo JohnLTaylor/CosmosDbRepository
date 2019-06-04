@@ -68,15 +68,5 @@ namespace CosmosDbRepository.Implementation
                 ? database
                 : await _client.CreateDatabaseAsync(new Database { Id = _id });
         }
-
-        private string GetCollectionName<T>(string name)
-        {
-            if (name != null)
-                return name;
-
-            var attrib = typeof(T).GetCustomAttributes(false).OfType<CosmosDbRepositoryNameAttribute>().SingleOrDefault();
-
-            return attrib?.Name ?? typeof(T).Name;
-        }
     }
 }

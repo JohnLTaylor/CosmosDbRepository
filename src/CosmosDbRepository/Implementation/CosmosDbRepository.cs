@@ -162,7 +162,7 @@ namespace CosmosDbRepository.Implementation
 
             T result = default(T);
 
-            while (query.HasMoreResults)
+            if (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<T>().ConfigureAwait(true);
                 result = response.FirstOrDefault();

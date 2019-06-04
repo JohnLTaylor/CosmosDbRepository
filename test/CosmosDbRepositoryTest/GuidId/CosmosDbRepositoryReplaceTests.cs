@@ -9,43 +9,48 @@ using System.Threading.Tasks;
 namespace CosmosDbRepositoryTest.GuidId
 {
     [TestClass]
-    public class CosmosDbRepositoryAddTests
+    public class CosmosDbRepositoryReplaceTests
         : CosmosDbRepositoryTests<TestData<Guid>>
     {
         [TestMethod]
-        public async Task Add_Expect_Success()
+        public async Task Replace_Expect_Success()
         {
             using (var context = CreateContext())
             {
                 var data = new TestData<Guid>
                 {
                     Id = Guid.NewGuid(),
-                    Data = "My Data"
+                    Data = "Old Data"
                 };
 
-                await context.Repo.AddAsync(data);
+                data = await context.Repo.AddAsync(data);
+
+                data.Data = "New Data";
+
+                await context.Repo.ReplaceAsync(data);
             }
         }
 
         [TestMethod]
-        public async Task Add_Expect_Conflict()
+        public async Task Replace_Expect_PreconditionFailed()
         {
             using (var context = CreateContext())
             {
                 var data = new TestData<Guid>
                 {
                     Id = Guid.NewGuid(),
-                    Data = "My Data"
+                    Data = "Old Data"
                 };
 
-                await context.Repo.AddAsync(data);
-                var faultedTask = context.Repo.AddAsync(data);
+                data = await context.Repo.AddAsync(data);
+                await context.Repo.ReplaceAsync(data);
+                var faultedTask = context.Repo.ReplaceAsync(data);
                 await faultedTask.ShollowException();
 
                 faultedTask.IsFaulted.Should().BeTrue();
                 faultedTask.Exception.InnerExceptions.Should().HaveCount(1);
                 var dce = faultedTask.Exception.InnerExceptions.Single() as DocumentClientException;
-                dce.StatusCode.Should().Be(HttpStatusCode.Conflict);
+                dce.StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
             }
         }
     }

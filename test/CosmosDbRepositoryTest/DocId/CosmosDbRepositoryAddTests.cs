@@ -7,14 +7,14 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace CosmosDbRepositoryTest.IntId
+namespace CosmosDbRepositoryTest.DocId
 {
     [TestClass]
     public class CosmosDbRepositoryAddTests
         : CosmosDbRepositoryTests<TestData<DocumentId>>
     {
         [TestMethod]
-        public async Task Add_ExpectSuccess_AsInt()
+        public async Task Add_Expect_Success_AsInt()
         {
             using (var context = CreateContext())
             {
@@ -29,7 +29,7 @@ namespace CosmosDbRepositoryTest.IntId
         }
 
         [TestMethod]
-        public async Task Add_ExpectConflict_AsInt()
+        public async Task Add_Expect_Conflict_AsInt()
         {
             using (var context = CreateContext())
             {
@@ -51,7 +51,7 @@ namespace CosmosDbRepositoryTest.IntId
         }
 
         [TestMethod]
-        public async Task Add_ExpectSuccess_AsGuid()
+        public async Task Add_Expect_Success_AsGuid()
         {
             using (var context = CreateContext())
             {
@@ -66,7 +66,7 @@ namespace CosmosDbRepositoryTest.IntId
         }
 
         [TestMethod]
-        public async Task Add_ExpectConflict_AsGuid()
+        public async Task Add_Expect_Conflict_AsGuid()
         {
             using (var context = CreateContext())
             {
@@ -88,7 +88,7 @@ namespace CosmosDbRepositoryTest.IntId
         }
 
         [TestMethod]
-        public async Task Add_ExpectSuccess_AsString()
+        public async Task Add_Expect_Success_AsString()
         {
             using (var context = CreateContext())
             {
@@ -103,7 +103,7 @@ namespace CosmosDbRepositoryTest.IntId
         }
 
         [TestMethod]
-        public async Task Add_ExpectConflict_AsString()
+        public async Task Add_Expect_Conflict_AsString()
         {
             using (var context = CreateContext())
             {
