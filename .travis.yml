@@ -1,7 +1,7 @@
 language: csharp
 solution: CosmosDbRepository.sln
 dotnet: 2.2
-dist: trusty
+dist: bionic
 install:
   - dotnet restore
 script:
