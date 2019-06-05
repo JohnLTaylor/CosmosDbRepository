@@ -1,10 +1,8 @@
 language: csharp
+solution: CosmosDbRepository.sln
 dotnet: 2.2
-solution: "./CosmosDbRepository.sln"
+dist: trusty
 install:
-        - travis_retry nuget restore -source "https://www.nuget.org/api/v2" ./CosmosDbRepository.sln
-        - sudo apt-get install nunit-console
+  - dotnet restore
 script:
-        - xbuild ./CosmosDbRepository.sln
-        - find -iname "CosmosDbRepositoryTest.dll"
-        - nunit-console ./test/CosmosDbRepositoryTest/bin/Debug/CosmosDbRepositoryTest.dll
+  - dotnet build
