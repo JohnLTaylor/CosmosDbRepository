@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,6 +6,7 @@
     <Authors>John Taylor</Authors>
     <PackageProjectUrl>https://github.com/JohnLTaylor/DocumentDBRepo</PackageProjectUrl>
     <AssemblyName>CosmosDbRepository</AssemblyName>
+    <RootNamespace>CosmosDbRepository</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

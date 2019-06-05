@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <LangVersion>latest</LangVersion>
     <UserSecretsId>42945E25-591D-4576-BA9F-756C9396775F</UserSecretsId>
+    <RootNamespace>CosmosDbRepository.Sample</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
