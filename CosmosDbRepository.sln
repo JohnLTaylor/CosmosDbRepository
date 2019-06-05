@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0A473E5F-67C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C59B0623-A1B3-40CF-8BEE-C6B8D5EA0A9C}"
 	ProjectSection(SolutionItems) = preProject
+		.travis.yml = .travis.yml
 		azure-pipelines.yml = azure-pipelines.yml
 		README.md = README.md
 	EndProjectSection
@@ -21,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDbRepository.Types", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7AAE46A6-529D-44F3-8540-B42976F4521B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmosDbRepositoryTest", "test\CosmosDbRepositoryTest\CosmosDbRepositoryTest.csproj", "{87330539-1E91-459D-802A-5D6B705DADFD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDbRepositoryTest", "test\CosmosDbRepositoryTest\CosmosDbRepositoryTest.csproj", "{87330539-1E91-459D-802A-5D6B705DADFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
