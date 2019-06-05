@@ -23,7 +23,7 @@ namespace CosmosDbRepository.Implementation
             return this;
         }
 
-        public ICosmosDbRepositoryBuilder WithThroughput(int throughput)
+        public ICosmosDbRepositoryBuilder WithThroughput(int? throughput)
         {
             _throughput = throughput;
             return this;

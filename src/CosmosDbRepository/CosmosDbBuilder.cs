@@ -26,7 +26,7 @@ namespace CosmosDbRepository
             return this;
         }
 
-        public ICosmosDbBuilder WithDefaultThroughput(int defaultThroughput)
+        public ICosmosDbBuilder WithDefaultThroughput(int? defaultThroughput)
         {
             _defaultThroughput = defaultThroughput;
             return this;
