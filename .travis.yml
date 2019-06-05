@@ -6,4 +6,4 @@ install:
         - sudo apt-get install nunit-console
 script:
         - xbuild ./CosmosDbRepository.sln
-        - nunit-console ./test/CosmosDbRepositoryTest/bin/Debug/netcoreapp2.2/CosmosDbRepositoryTest.dll
+        - nunit-console ./test/CosmosDbRepositoryTest/bin/Debug/CosmosDbRepositoryTest.dll
