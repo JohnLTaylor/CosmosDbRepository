@@ -65,6 +65,7 @@ namespace CosmosDbRepository.Implementation
 
             if (eTag != null)
             {
+                requestOptions = requestOptions ?? new RequestOptions();
                 requestOptions.AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = eTag };
             }
 
@@ -83,6 +84,7 @@ namespace CosmosDbRepository.Implementation
 
             if (eTag != null)
             {
+                requestOptions = requestOptions ?? new RequestOptions();
                 requestOptions.AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = eTag };
             }
 
@@ -227,6 +229,7 @@ namespace CosmosDbRepository.Implementation
 
             if (eTag != null)
             {
+                requestOptions = requestOptions ?? new RequestOptions();
                 requestOptions.AccessCondition = new AccessCondition { Type = AccessConditionType.IfNoneMatch, Condition = eTag };
             }
 
