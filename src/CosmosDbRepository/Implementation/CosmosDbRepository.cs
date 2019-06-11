@@ -55,8 +55,6 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<T> AddAsync(T entity, RequestOptions requestOptions = null)
         {
-            requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
             var addedDoc = await _client.CreateDocumentAsync((await _collection).SelfLink, entity, requestOptions);
             return JsonConvert.DeserializeObject<T>(addedDoc.Resource.ToString());
         }
@@ -64,9 +62,6 @@ namespace CosmosDbRepository.Implementation
         public async Task<T> ReplaceAsync(T entity, RequestOptions requestOptions = null)
         {
             (string id, string eTag) = GetIdAndETag(entity);
-
-            requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
 
             if (eTag != null)
             {
@@ -85,9 +80,6 @@ namespace CosmosDbRepository.Implementation
         public async Task<T> UpsertAsync(T entity, RequestOptions requestOptions = null)
         {
             (string id, string eTag) = GetIdAndETag(entity);
-
-            requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
 
             if (eTag != null)
             {
@@ -120,13 +112,13 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
-            feedOptions = feedOptions?.ShallowCopy() ?? new FeedOptions();
+            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
 
             feedOptions.RequestContinuation = continuationToken;
             feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
 
             var query =
-                _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
                 .ConditionalWhere(predicate)
                 .ApplyClauses(clauses)
                 .AsDocumentQuery();
@@ -136,6 +128,57 @@ namespace CosmosDbRepository.Implementation
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<T>().ConfigureAwait(true);
+                result.Items.AddRange(response);
+
+                if (pageSize > 0 && result.Items.Count >= pageSize)
+                {
+                    result.ContinuationToken = response.ResponseContinuation;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<IList<U>> SelectAsync<U>(Expression<Func<T, U>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        {
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
+                .ApplyClauses(whereClauses)
+                .Select(selector)
+                .ApplyClauses(selectClauses)
+                .AsDocumentQuery();
+
+            var results = new List<U>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                results.AddRange(response);
+            }
+
+            return results;
+        }
+
+        public async Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, Expression<Func<T, U>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        {
+            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
+
+            feedOptions.RequestContinuation = continuationToken;
+            feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
+                .ApplyClauses(whereClauses)
+                .Select(selector)
+                .ApplyClauses(selectClauses)
+                .AsDocumentQuery();
+
+            var result = new CosmosDbRepositoryPagedResults<U>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
                 result.Items.AddRange(response);
 
                 if (pageSize > 0 && result.Items.Count >= pageSize)
@@ -182,9 +225,6 @@ namespace CosmosDbRepository.Implementation
         {
             (string id, string eTag) = GetIdAndETag(entity);
 
-            requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-            requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
-
             if (eTag != null)
             {
                 requestOptions.AccessCondition = new AccessCondition { Type = AccessConditionType.IfNoneMatch, Condition = eTag };
@@ -220,8 +260,6 @@ namespace CosmosDbRepository.Implementation
 
             try
             {
-                requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
-                requestOptions.JsonSerializerSettings = requestOptions.JsonSerializerSettings;
                 var response = await _client.ReadDocumentAsync<T>(documentLink, requestOptions);
                 result = response.Document;
             }
@@ -251,7 +289,7 @@ namespace CosmosDbRepository.Implementation
 
             if (eTag != null)
             {
-                requestOptions = (requestOptions?.ShallowCopy() ?? new RequestOptions());
+                requestOptions = (requestOptions ?? new RequestOptions()).ShallowCopy();
                 requestOptions.AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = eTag };
             }
 
