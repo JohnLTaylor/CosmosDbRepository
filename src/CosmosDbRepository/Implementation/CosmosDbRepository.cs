@@ -93,6 +93,50 @@ namespace CosmosDbRepository.Implementation
             return JsonConvert.DeserializeObject<T>(response.Resource.ToString());
         }
 
+        public async Task<IList<TOut>> FindAsync<TOut>(string sql, FeedOptions feedOptions = null)
+        {
+            var query = _client
+                .CreateDocumentQuery<TOut>((await _collection).SelfLink, sql, feedOptions ?? _defaultFeedOptions)
+                .AsDocumentQuery();
+
+            var results = new List<TOut>();
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<TOut>().ConfigureAwait(true);
+                results.AddRange(response);
+            }
+
+            return results;
+        }
+
+        public async Task<CosmosDbRepositoryPagedResults<TOut>> FindAsync<TOut>(int pageSize, string continuationToken, string sql, FeedOptions feedOptions = null)
+        {
+            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
+
+            feedOptions.RequestContinuation = continuationToken;
+            feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            var query = _client
+                .CreateDocumentQuery<TOut>((await _collection).SelfLink, sql, feedOptions)
+                .AsDocumentQuery();
+
+            var results = new CosmosDbRepositoryPagedResults<TOut>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<TOut>().ConfigureAwait(true);
+                results.Items.AddRange(response);
+
+                if (pageSize > 0 && results.Items.Count >= pageSize)
+                {
+                    results.ContinuationToken = response.ResponseContinuation;
+                    break;
+                }
+            }
+
+            return results;
+        }
+
         public async Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             var query =

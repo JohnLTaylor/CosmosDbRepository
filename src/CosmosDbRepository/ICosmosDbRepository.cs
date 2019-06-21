@@ -22,6 +22,8 @@ namespace CosmosDbRepository
         Task<T> AddAsync(T entity, RequestOptions requestOptions = null);
         Task<T> GetAsync(T entity, RequestOptions requestOptions = null);
         Task<T> GetAsync(DocumentId itemId, RequestOptions requestOptions = null);
+        Task<IList<TOut>> FindAsync<TOut>(string sql, FeedOptions feedOptions = null);
+        Task<CosmosDbRepositoryPagedResults<TOut>> FindAsync<TOut>(int pageSize, string continuationToken, string sql, FeedOptions feedOptions = null);
         Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null);
         Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null);
         Task<IList<U>> SelectAsync<U>(Expression<Func<T, U>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null);
