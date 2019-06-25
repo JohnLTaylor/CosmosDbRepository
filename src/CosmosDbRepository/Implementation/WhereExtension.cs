@@ -8,16 +8,41 @@ namespace CosmosDbRepository.Implementation
     {
         public static IQueryable<TSource> ConditionalWhere<TSource>(this IQueryable<TSource> source, Expression<Func<TSource, bool>> predicate)
         {
-            return (predicate != null)
+            if (source is null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            return (predicate != default)
                 ? source.Where(predicate)
                 : source;
         }
 
-        public static IQueryable<TSource> ApplyClauses<TSource>(this IQueryable<TSource> source, Func<IQueryable<TSource>, IQueryable<TSource>> clauses)
+        public static IQueryable<TSource> ConditionalApplyClauses<TSource>(this IQueryable<TSource> source, Func<IQueryable<TSource>, IQueryable<TSource>> clauses)
         {
-            return (clauses != null)
+            if (source is null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            return (clauses != default)
                 ? clauses.Invoke(source)
                 : source;
+        }
+
+        public static IQueryable<TResult> ApplyClauses<TSource, TResult>(this IQueryable<TSource> source, Func<IQueryable<TSource>, IQueryable<TResult>> clauses)
+        {
+            if (source is null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (clauses is null)
+            {
+                throw new ArgumentNullException(nameof(clauses));
+            }
+
+            return clauses.Invoke(source);
         }
 
     }

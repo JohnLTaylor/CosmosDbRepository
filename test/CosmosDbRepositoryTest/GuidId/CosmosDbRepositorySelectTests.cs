@@ -33,8 +33,8 @@ namespace CosmosDbRepositoryTest.GuidId
 
                 results = await context.Repo.SelectAsync(
                     d => d.Rank,
-                    whereClauses: q => q.Where(d => d.Data == uniqueData),
-                    selectClauses: q => q.Distinct());
+                    q => q.Where(d => d.Data == uniqueData),
+                    q => q.Distinct());
 
                 results.Should().NotBeNull();
                 results.Count().Should().Be(3);
@@ -48,8 +48,8 @@ namespace CosmosDbRepositoryTest.GuidId
 
                 results = await context.Repo.SelectAsync(
                     d => d.Rank,
-                    whereClauses: q => q.Where(d => d.Data == uniqueData && d.Rank == 1),
-                    selectClauses: q => q.Distinct());
+                    q => q.Where(d => d.Data == uniqueData && d.Rank == 1),
+                    q => q.Distinct());
 
                 results.Should().NotBeNull();
                 results.Count().Should().Be(1);
@@ -63,8 +63,8 @@ namespace CosmosDbRepositoryTest.GuidId
 
                 results = await context.Repo.SelectAsync(
                     d => d.Rank,
-                    whereClauses: q => q.Where(d => d.Data == uniqueData && d.Rank == 2),
-                    selectClauses: q => q.Distinct());
+                    q => q.Where(d => d.Data == uniqueData && d.Rank == 2),
+                    q => q.Distinct());
 
                 results.Should().NotBeNull();
                 results.Count().Should().Be(1);
@@ -78,12 +78,65 @@ namespace CosmosDbRepositoryTest.GuidId
 
                 results = await context.Repo.SelectAsync(
                     d => d.Rank,
-                    whereClauses: q => q.Where(d => d.Data == uniqueData && d.Rank == 3),
-                    selectClauses: q => q.Distinct());
+                    q => q.Where(d => d.Data == uniqueData && d.Rank == 3),
+                    q => q.Distinct());
 
                 results.Should().NotBeNull();
                 results.Count().Should().Be(1);
             }
+        }
+
+        [TestMethod]
+        public async Task Select_DistinctCount_Expect_Success()
+        {
+            using (var context = CreateContext())
+            {
+                var uniqueData = Guid.NewGuid().ToString();
+
+                var data1 = await GetTestData(context, uniqueData, 1, CreateSubData);
+                var data2a = await GetTestData(context, uniqueData, 2, CreateSubData);
+                var data2b = await GetTestData(context, uniqueData, 2, CreateSubData);
+                var data3a = await GetTestData(context, uniqueData, 3, CreateSubData);
+                var data3b = await GetTestData(context, uniqueData, 3, CreateSubData);
+                var data3c = await GetTestData(context, uniqueData, 3, CreateSubData);
+
+                var results = await context.Repo.SelectAsync(
+                    d => d.Rank,
+                    whereClauses: q => q.Where(d => d.Data == uniqueData));
+
+                results.Should().NotBeNull();
+                results.Count().Should().Be(6);
+
+                var groupResults = await context.Repo.SelectManyAsync(
+                    d => d.Subdata.SelectMany(e => e.SubSubData).Select(f => new { d.Id, d.Data, d.Rank, fId = f.Id, f.Value }),
+                    q => q.Where(d => d.Data == uniqueData));
+
+
+                groupResults.Should().NotBeNull();
+
+                var count = new[] { data1, data2a, data2b, data3a, data3b, data3c }.SelectMany(a => a.Subdata.SelectMany(b => b.SubSubData)).Count();
+
+                groupResults.Count().Should().Be(count);
+            }
+        }
+
+        private void CreateSubData(TestData<Guid> data)
+        {
+            var rand = new Random();
+
+            data.Subdata = Enumerable.Range(0, rand.Next(0, 5))
+                .Select(i =>
+                    new TestSubData
+                    {
+                        SubSubData = Enumerable.Range(0, rand.Next(0, 5))
+                            .Select(j => new TestSubSubData
+                            {
+                                Id = Guid.NewGuid(),
+                                Value = rand.Next(256).ToString()
+                            })
+                            .ToArray()
+                    })
+                .ToArray();
         }
     }
 }

@@ -98,7 +98,7 @@ namespace CosmosDbRepository.Implementation
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .ConditionalWhere(predicate)
-                .ApplyClauses(clauses)
+                .ConditionalApplyClauses(clauses)
                 .AsDocumentQuery();
 
             var results = new List<T>();
@@ -122,7 +122,7 @@ namespace CosmosDbRepository.Implementation
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
                 .ConditionalWhere(predicate)
-                .ApplyClauses(clauses)
+                .ConditionalApplyClauses(clauses)
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<T>();
@@ -146,9 +146,9 @@ namespace CosmosDbRepository.Implementation
         {
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
-                .ApplyClauses(whereClauses)
+                .ConditionalApplyClauses(whereClauses)
                 .Select(selector)
-                .ApplyClauses(selectClauses)
+                .ConditionalApplyClauses(selectClauses)
                 .AsDocumentQuery();
 
             var results = new List<U>();
@@ -171,7 +171,7 @@ namespace CosmosDbRepository.Implementation
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
-                .ApplyClauses(whereClauses)
+                .ConditionalApplyClauses(whereClauses)
                 .Select(selector)
                 .ApplyClauses(selectClauses)
                 .AsDocumentQuery();
@@ -193,11 +193,72 @@ namespace CosmosDbRepository.Implementation
             return result;
         }
 
+        public async Task<IList<TResult>> SelectManyAsync<TItem, TResult>(Expression<Func<T, IEnumerable<TItem>>> selector, Func<IQueryable<TItem>, IQueryable<TResult>> selectClauses, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, FeedOptions feedOptions = null)
+        {
+            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
+
+//            feedOptions.RequestContinuation = continuationToken;
+//            feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
+                .ConditionalApplyClauses(whereClauses)
+                .Select(selector)
+                .AsDocumentQuery();
+
+            var results = new List<TResult>();
+            //var result = new CosmosDbRepositoryPagedResults<TResult>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<TResult[]>().ConfigureAwait(true);
+                results.AddRange(response.SelectMany(a => a));
+
+                //if (pageSize > 0 && result.Items.Count >= pageSize)
+                //{
+                //    result.ContinuationToken = response.ResponseContinuation;
+                //    break;
+                //}
+            }
+
+            return results;
+        }
+
+
+        public async Task<CosmosDbRepositoryPagedResults<U>> SelectManyAsync<V, U>(int pageSize, string continuationToken, Expression<Func<T, IEnumerable<V>>> selector, Func<IQueryable<V>, IQueryable<U>> selectClauses, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, FeedOptions feedOptions = null)
+        {
+            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
+            feedOptions.RequestContinuation = continuationToken;
+            feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
+                .ConditionalApplyClauses(whereClauses)
+                .Select(selector)
+                .AsDocumentQuery();
+
+            var result = new CosmosDbRepositoryPagedResults<U>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<U[]>().ConfigureAwait(true);
+
+                if (pageSize > 0 && result.Items.Count >= pageSize)
+                {
+                    result.ContinuationToken = response.ResponseContinuation;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+
         public async Task<int> CountAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             return await _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .ConditionalWhere(predicate)
-                .ApplyClauses(clauses)
+                .ConditionalApplyClauses(clauses)
                 .CountAsync();
         }
 
@@ -209,7 +270,7 @@ namespace CosmosDbRepository.Implementation
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
                 .ConditionalWhere(predicate)
-                .ApplyClauses(clauses)
+                .ConditionalApplyClauses(clauses)
                 .AsDocumentQuery();
 
             T result = default(T);

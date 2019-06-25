@@ -6,7 +6,11 @@ namespace CosmosDbRepositoryTest
 {
     public class CosmosDbRepositoryTests<T>
     {
-        protected Task<TestData<Guid>> GetTestData(TestingContext<TestData<Guid>> context, string uniqueData, int rank = 0)
+        protected Task<TestData<Guid>> GetTestData(
+            TestingContext<TestData<Guid>> context,
+            string uniqueData,
+            int rank = 0,
+            Action<TestData<Guid>> setupAction = null)
         {
             var data = new TestData<Guid>
             {
@@ -14,6 +18,8 @@ namespace CosmosDbRepositoryTest
                 Data = uniqueData,
                 Rank = rank
             };
+
+            setupAction?.Invoke(data);
 
             return context.Repo.AddAsync(data);
         }
