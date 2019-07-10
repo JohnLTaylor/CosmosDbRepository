@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>John Taylor</Authors>
+    <PackageProjectUrl>https://github.com/JohnLTaylor/DocumentDBRepo</PackageProjectUrl>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CosmosDbRepository\CosmosDbRepository.csproj" />
+  </ItemGroup>
+
+</Project>
