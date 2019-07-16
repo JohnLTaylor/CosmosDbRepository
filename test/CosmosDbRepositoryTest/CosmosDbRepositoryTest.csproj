@@ -2,9 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-
+    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
-
     <RootNamespace>CosmosDbRepositoryTest</RootNamespace>
   </PropertyGroup>
 
