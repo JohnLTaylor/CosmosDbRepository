@@ -1,9 +1,0 @@
-language: csharp
-solution: CosmosDbRepository.sln
-dotnet: 2.2
-dist: bionic
-install:
-  - dotnet restore
-script:
-  - dotnet build
-  - dotnet test

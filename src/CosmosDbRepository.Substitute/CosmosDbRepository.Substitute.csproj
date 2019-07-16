@@ -4,6 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>John Taylor</Authors>
+    <VersionPrefix Condition="'$(BUILD_BUILDNUMBER)' == ''">1.0.0</VersionPrefix>
+    <VersionPrefix Condition="'$(BUILD_BUILDNUMBER)' != ''">$(BUILD_BUILDNUMBER)</VersionPrefix>
     <PackageProjectUrl>https://github.com/JohnLTaylor/DocumentDBRepo</PackageProjectUrl>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
