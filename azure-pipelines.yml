@@ -39,19 +39,6 @@ steps:
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 
-#- script: |
-#    dotnet build --configuration $(buildConfiguration)
-#    dotnet test dotnetcore-tests --configuration $(buildConfiguration) --logger trx
-#    dotnet pack src/CosmosDbRepository/CosmosDbRepository.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore --include-symbols --include-source
-#    dotnet pack src/CosmosDbRepository.Substitute/CosmosDbRepository.Substitute.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore --include-symbols --include-source
-#    dotnet pack src/CosmosDbRepository.Types/CosmosDbRepository.Types.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore --include-symbols --include-source
-
-#- task: PublishTestResults@2
-#  condition: succeededOrFailed()
-#  inputs:
-#    testRunner: VSTest
-#    testResultsFiles: '**/*.trx'
-
 - task: NuGetCommand@2
   displayName: 'NuGet push'
   inputs:
@@ -61,10 +48,3 @@ steps:
     packagesToPush: 'src/**/*.nupkg'
     allowPackageConflicts: true
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-
-#- task: NuGetCommand@2
-#  inputs:
-#    command: push
-#    nuGetFeedType: external
-#    publishFeedCredentials: 'Nuget'
-#    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
