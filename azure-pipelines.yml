@@ -24,20 +24,22 @@ steps:
     command: test
     publishTestResults: true
 
-- task: DeleteFiles@1
-  displayName: Delete files Nuget Packages created during tests
+#- task: DeleteFiles@1
+#  displayName: Delete files Nuget Packages created during tests
+#  inputs:
+#    SourceFolder: 'src/'
+#    Contents: '**/*.nupkg;**/*.snupkg'
+#  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+- task: NuGetToolInstaller@0
   inputs:
-    SourceFolder: 'src/'
-    Contents: '**/*.nupkg;**/*.snupkg'
-  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-
+    checkLatest: true # Optional
+    
 - task: DotNetCoreCLI@2
   displayName: 'Build All Projects (master)'
   inputs:
     projects: 'src/**/*.csproj'
     arguments: '--configuration $(BuildConfiguration)'
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-
 
 - task: NuGetCommand@2
   displayName: 'NuGet push'
