@@ -13,7 +13,6 @@ steps:
   displayName: 'dotnet restore'
   inputs:
     command: restore
-    vstsFeed: '$(VSTSNugetFeed)'
     projects: '**/*.csproj'
 
 - task: DotNetCoreCLI@2
