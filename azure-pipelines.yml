@@ -28,7 +28,7 @@ steps:
   displayName: Delete files Nuget Packages created during tests
   inputs:
     SourceFolder: 'src/'
-    Contents: '**/*.nupkg;!**/*.snupkg'
+    Contents: '**/*.nupkg;**/*.snupkg'
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
 
 - task: DotNetCoreCLI@2
@@ -45,6 +45,6 @@ steps:
     command: push
     nuGetFeedType: external
     publishFeedCredentials: 'Nuget'
-    packagesToPush: 'src/**/*.nupkg;!src/**/*.snupkg'
+    packagesToPush: 'src/**/*.nupkg;src/**/*.snupkg'
     allowPackageConflicts: true
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
