@@ -1,33 +1,71 @@
 # Build ASP.NET Core project using Azure Pipelines
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core?view=vsts
+name: 1.0$(rev:.r)
 
 pool:
   vmImage: 'Ubuntu 16.04'
   
 variables:
   buildConfiguration: 'Release'
-  major: 1
-  minor: 0
-  patch: $[counter('myversioncounter', 0)]
- 
 
 steps:
-- script: |
-    dotnet build --configuration $(buildConfiguration)
-    dotnet test dotnetcore-tests --configuration $(buildConfiguration) --logger trx
-    dotnet pack src/CosmosDbRepository/CosmosDbRepository.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore
-    dotnet pack src/CosmosDbRepository.Substitute/CosmosDbRepository.Substitute.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore
-    dotnet pack src/CosmosDbRepository.Types/CosmosDbRepository.Types.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore
-
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet restore'
   inputs:
-    testRunner: VSTest
-    testResultsFiles: '**/*.trx'
+    command: restore
+    vstsFeed: '$(VSTSNugetFeed)'
+    projects: '**/*.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Run Unit Tests'
+  condition: succeeded()
+  inputs:
+    projects: 'test/**/*.csproj'
+    arguments: '--configuration $(BuildConfiguration)'
+    command: test
+    publishTestResults: true
+
+- task: DeleteFiles@1
+  displayName: Delete files Nuget Packages created during tests
+  inputs:
+    SourceFolder: 'src/'
+    Contents: '**/*.nupkg'
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build All Projects (master)'
+  inputs:
+    projects: 'src/**/*.csproj'
+    arguments: '--configuration $(BuildConfiguration)'
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+
+#- script: |
+#    dotnet build --configuration $(buildConfiguration)
+#    dotnet test dotnetcore-tests --configuration $(buildConfiguration) --logger trx
+#    dotnet pack src/CosmosDbRepository/CosmosDbRepository.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore --include-symbols --include-source
+#    dotnet pack src/CosmosDbRepository.Substitute/CosmosDbRepository.Substitute.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore --include-symbols --include-source
+#    dotnet pack src/CosmosDbRepository.Types/CosmosDbRepository.Types.csproj -c $(buildConfiguration) /p:PackageVersion=$(major).$(minor).$(patch) --output $(Build.ArtifactStagingDirectory) --no-build --no-restore --include-symbols --include-source
+
+#- task: PublishTestResults@2
+#  condition: succeededOrFailed()
+#  inputs:
+#    testRunner: VSTest
+#    testResultsFiles: '**/*.trx'
 
 - task: NuGetCommand@2
+  displayName: 'NuGet push'
   inputs:
     command: push
     nuGetFeedType: external
     publishFeedCredentials: 'Nuget'
-    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
+    packagesToPush: 'src/**/*.nupkg'
+    allowPackageConflicts: true
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+#- task: NuGetCommand@2
+#  inputs:
+#    command: push
+#    nuGetFeedType: external
+#    publishFeedCredentials: 'Nuget'
+#    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
