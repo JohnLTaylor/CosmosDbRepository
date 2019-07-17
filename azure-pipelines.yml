@@ -47,6 +47,6 @@ steps:
     command: push
     nuGetFeedType: external
     publishFeedCredentials: 'Nuget'
-    packagesToPush: 'src/**/*.nupkg;src/**/*.snupkg'
+    packagesToPush: 'src/**/*.*nupkg'
     allowPackageConflicts: true
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
