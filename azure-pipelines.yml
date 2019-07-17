@@ -2,6 +2,9 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core?view=vsts
 name: 1.1$(rev:.r)
 
+trigger:
+  - master
+
 pool:
   vmImage: 'Ubuntu 16.04'
   
