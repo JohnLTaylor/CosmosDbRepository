@@ -24,12 +24,6 @@ steps:
     command: test
     publishTestResults: true
 
-#- task: DeleteFiles@1
-#  displayName: Delete files Nuget Packages created during tests
-#  inputs:
-#    SourceFolder: 'src/'
-#    Contents: '**/*.nupkg;**/*.snupkg'
-#  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
 - task: NuGetToolInstaller@0
   inputs:
     versionSpec: '5.1.0'  # Optional
@@ -49,4 +43,4 @@ steps:
     publishFeedCredentials: 'Nuget'
     packagesToPush: 'src/**/*.nupkg'
     allowPackageConflicts: true
-  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
