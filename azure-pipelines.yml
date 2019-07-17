@@ -32,7 +32,7 @@ steps:
 #  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
 - task: NuGetToolInstaller@0
   inputs:
-    checkLatest: true # Optional
+    versionSpec: '5.1.0'  # Optional
     
 - task: DotNetCoreCLI@2
   displayName: 'Build All Projects (master)'
@@ -47,6 +47,6 @@ steps:
     command: push
     nuGetFeedType: external
     publishFeedCredentials: 'Nuget'
-    packagesToPush: 'src/**/*.nupkg;src/**/*.snupkg'
+    packagesToPush: 'src/**/*.*nupkg'
     allowPackageConflicts: true
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
