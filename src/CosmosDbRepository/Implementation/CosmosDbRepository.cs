@@ -142,11 +142,10 @@ namespace CosmosDbRepository.Implementation
             return result;
         }
 
-        public async Task<IList<U>> SelectAsync<U>(Expression<Func<T, U>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public async Task<IList<U>> SelectAsync<U>(Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
-                .ConditionalApplyClauses(whereClauses)
                 .Select(selector)
                 .ConditionalApplyClauses(selectClauses)
                 .AsDocumentQuery();
@@ -162,7 +161,7 @@ namespace CosmosDbRepository.Implementation
             return results;
         }
 
-        public async Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, Expression<Func<T, U>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public async Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
 
@@ -171,7 +170,57 @@ namespace CosmosDbRepository.Implementation
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
-                .ConditionalApplyClauses(whereClauses)
+                .Select(selector)
+                .ApplyClauses(selectClauses)
+                .AsDocumentQuery();
+
+            var result = new CosmosDbRepositoryPagedResults<U>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                result.Items.AddRange(response);
+
+                if (pageSize > 0 && result.Items.Count >= pageSize)
+                {
+                    result.ContinuationToken = response.ResponseContinuation;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<IList<U>> SelectAsync<U, V>(Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        {
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
+                .ApplyClauses(whereClauses)
+                .Select(selector)
+                .ConditionalApplyClauses(selectClauses)
+                .AsDocumentQuery();
+
+            var results = new List<U>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                results.AddRange(response);
+            }
+
+            return results;
+        }
+
+        public async Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U, V>(int pageSize, string continuationToken, Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        {
+            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
+
+            feedOptions.RequestContinuation = continuationToken;
+            feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
+                .ApplyClauses(whereClauses)
                 .Select(selector)
                 .ApplyClauses(selectClauses)
                 .AsDocumentQuery();

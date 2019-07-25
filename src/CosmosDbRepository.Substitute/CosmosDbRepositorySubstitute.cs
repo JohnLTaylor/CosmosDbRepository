@@ -132,13 +132,13 @@ namespace CosmosDbRepository.Substitute
             throw new NotImplementedException();
         }
 
-        public async Task<IList<U>> SelectAsync<U>(Expression<Func<TEntity, U>> selector, Func<IQueryable<TEntity>, IQueryable<TEntity>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public async Task<IList<U>> SelectAsync<U>(Expression<Func<TEntity, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
-            var result = await SelectAsync(feedOptions?.MaxItemCount ?? 0, default, selector, whereClauses, selectClauses, feedOptions);
+            var result = await SelectAsync(feedOptions?.MaxItemCount ?? 0, default, selector, selectClauses, feedOptions);
             return result.Items;
         }
 
-        public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, Expression<Func<TEntity, U>> selector, Func<IQueryable<TEntity>, IQueryable<TEntity>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, Expression<Func<TEntity, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             IEnumerable<TEntity> entities;
 
@@ -154,10 +154,48 @@ namespace CosmosDbRepository.Substitute
                 entities = JsonConvert.DeserializeObject<TEntity[]>(continuationToken);
             }
 
-            if (whereClauses != default)
-                entities = whereClauses.Invoke(entities.AsQueryable());
-
             var items = entities.Select(selector.Compile());
+
+            if (selectClauses != default)
+                items = selectClauses.Invoke(items.AsQueryable());
+
+            var result = new CosmosDbRepositoryPagedResults<U>()
+            {
+                Items = items.ToList()
+            };
+
+            if (pageSize > 0 && pageSize < result.Items.Count)
+            {
+                result.ContinuationToken = JsonConvert.SerializeObject(result.Items.Skip(pageSize));
+                result.Items = result.Items.Take(pageSize).ToList();
+            }
+
+            return Task.FromResult(result);
+        }
+
+        public async Task<IList<U>> SelectAsync<U, V>(Expression<Func<V, U>> selector, Func<IQueryable<TEntity>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        {
+            var result = await SelectAsync(feedOptions?.MaxItemCount ?? 0, default, selector, whereClauses, selectClauses, feedOptions);
+            return result.Items;
+        }
+
+        public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U, V>(int pageSize, string continuationToken, Expression<Func<V, U>> selector, Func<IQueryable<TEntity>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        {
+            IEnumerable<TEntity> entities;
+
+            if (string.IsNullOrEmpty(continuationToken))
+            {
+                lock (_entities)
+                {
+                    entities = _entities.Select(i => i.Entity).ToArray();
+                }
+            }
+            else
+            {
+                entities = JsonConvert.DeserializeObject<TEntity[]>(continuationToken);
+            }
+
+            var items = whereClauses.Invoke(entities.AsQueryable()).Select(selector.Compile());
 
             if (selectClauses != default)
                 items = selectClauses.Invoke(items.AsQueryable());
