@@ -171,7 +171,7 @@ namespace CosmosDbRepository.Implementation
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
                 .Select(selector)
-                .ApplyClauses(selectClauses)
+                .ConditionalApplyClauses(selectClauses)
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<U>();
@@ -222,7 +222,7 @@ namespace CosmosDbRepository.Implementation
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
                 .ApplyClauses(whereClauses)
                 .Select(selector)
-                .ApplyClauses(selectClauses)
+                .ConditionalApplyClauses(selectClauses)
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<U>();
