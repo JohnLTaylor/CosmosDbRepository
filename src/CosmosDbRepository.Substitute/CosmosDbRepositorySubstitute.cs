@@ -345,7 +345,21 @@ namespace CosmosDbRepository.Substitute
 
         public Task<TEntity> UpsertAsync(TEntity entity, RequestOptions requestOptions = null)
         {
-            throw new NotImplementedException();
+            var item = new EntityStorage(entity);
+
+            if (string.IsNullOrEmpty(item.Id))
+                item.Id = Guid.NewGuid().ToString();
+
+            lock (_entities)
+            {
+
+                item.ETag = $"\"{Guid.NewGuid()}\"";
+
+                _entities.RemoveAll(cfg => cfg.Id == item.Id);
+                _entities.Add(item);
+            }
+
+            return Task.FromResult(DeepClone(item.Entity));
         }
 
         private static TEntity DeepClone(TEntity src)
