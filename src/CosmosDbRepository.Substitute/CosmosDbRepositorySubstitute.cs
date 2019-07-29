@@ -57,12 +57,20 @@ namespace CosmosDbRepository.Substitute
 
         public Task<bool> DeleteDocumentAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
-            throw new NotImplementedException();
+            bool result;
+
+            lock (_entities)
+            {
+                result = _entities.RemoveAll(cfg => cfg.Id == itemId) > 0;
+            }
+
+            return Task.FromResult(result);
         }
 
         public Task<bool> DeleteDocumentAsync(TEntity entity, RequestOptions requestOptions = null)
         {
-            throw new NotImplementedException();
+            var item = new EntityStorage(entity);
+            return DeleteDocumentAsync(item.Id, requestOptions);
         }
 
         public async Task<IList<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IQueryable<TEntity>> clauses = null, FeedOptions feedOptions = null)
@@ -114,12 +122,20 @@ namespace CosmosDbRepository.Substitute
 
         public Task<TEntity> GetAsync(TEntity entity, RequestOptions requestOptions = null)
         {
-            throw new NotImplementedException();
+            var item = new EntityStorage(entity);
+            return GetAsync(item.Id, requestOptions);
         }
 
         public Task<TEntity> GetAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
-            throw new NotImplementedException();
+            TEntity item;
+
+            lock (_entities)
+            {
+                item = _entities.FirstOrDefault(cfg => cfg.Id == itemId).Entity;
+            }
+
+            return Task.FromResult(DeepClone(item));
         }
 
         public Task Init()
