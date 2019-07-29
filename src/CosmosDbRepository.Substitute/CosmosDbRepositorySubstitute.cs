@@ -128,14 +128,14 @@ namespace CosmosDbRepository.Substitute
 
         public Task<TEntity> GetAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
-            TEntity item;
+            EntityStorage item;
 
             lock (_entities)
             {
-                item = _entities.FirstOrDefault(cfg => cfg.Id == itemId)?.Entity;
+                item = _entities.FirstOrDefault(cfg => cfg.Id == itemId);
             }
 
-            return Task.FromResult(DeepClone(item));
+            return Task.FromResult(item == default ? default : DeepClone(item.Entity));
         }
 
         public Task Init()
