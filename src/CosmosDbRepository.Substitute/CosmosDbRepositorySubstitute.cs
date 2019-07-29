@@ -132,7 +132,7 @@ namespace CosmosDbRepository.Substitute
 
             lock (_entities)
             {
-                item = _entities.FirstOrDefault(cfg => cfg.Id == itemId).Entity;
+                item = _entities.FirstOrDefault(cfg => cfg.Id == itemId)?.Entity;
             }
 
             return Task.FromResult(DeepClone(item));
