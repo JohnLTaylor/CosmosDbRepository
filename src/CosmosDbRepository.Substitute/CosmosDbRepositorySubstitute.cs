@@ -47,7 +47,20 @@ namespace CosmosDbRepository.Substitute
 
         public Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IQueryable<TEntity>> clauses = null, FeedOptions feedOptions = null)
         {
-            throw new NotImplementedException();
+            IEnumerable<TEntity> entities;
+
+            lock (_entities)
+            {
+                entities = _entities.Select(i => i.Entity).ToArray();
+            }
+
+            if (predicate != default)
+                entities = entities.Where(predicate.Compile());
+
+            if (clauses != default)
+                entities = clauses.Invoke(entities.AsQueryable());
+
+            return Task.FromResult(entities.Count());
         }
 
         public Task<bool> DeleteAsync(RequestOptions requestOptions = null)
@@ -117,7 +130,20 @@ namespace CosmosDbRepository.Substitute
 
         public Task<TEntity> FindFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IQueryable<TEntity>> clauses = null, FeedOptions feedOptions = null)
         {
-            throw new NotImplementedException();
+            IEnumerable<TEntity> entities;
+
+            lock (_entities)
+            {
+                entities = _entities.Select(i => i.Entity).ToArray();
+            }
+
+            if (predicate != default)
+                entities = entities.Where(predicate.Compile());
+
+            if (clauses != default)
+                entities = clauses.Invoke(entities.AsQueryable());
+
+            return Task.FromResult(entities.FirstOrDefault());
         }
 
         public Task<TEntity> GetAsync(TEntity entity, RequestOptions requestOptions = null)
