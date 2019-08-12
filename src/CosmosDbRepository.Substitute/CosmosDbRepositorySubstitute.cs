@@ -21,7 +21,7 @@ namespace CosmosDbRepository.Substitute
 
         public string Id => throw new NotImplementedException();
 
-        public Type Type => throw new NotImplementedException();
+        public Type Type => typeof(TEntity);
 
         public Task<string> AltLink => throw new NotImplementedException();
 
@@ -38,7 +38,7 @@ namespace CosmosDbRepository.Substitute
                     throw CreateDbException(HttpStatusCode.Conflict, "Duplicate id");
 
                 item.ETag = $"\"{Guid.NewGuid()}\"";
-
+                item.TS = DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond;
                 _entities.Add(item);
             }
 
@@ -83,7 +83,22 @@ namespace CosmosDbRepository.Substitute
         public Task<bool> DeleteDocumentAsync(TEntity entity, RequestOptions requestOptions = null)
         {
             var item = new EntityStorage(entity);
-            return DeleteDocumentAsync(item.Id, requestOptions);
+
+            lock (_entities)
+            {
+                var index = _entities.FindIndex(d => d.Id == item.Id);
+
+                if (index < 0)
+                {
+                    return Task.FromResult(false);
+                }
+
+                if (CheckETag(entity, _entities[index], out var exception))
+                    return Task.FromException<bool>(exception);
+
+                _entities.RemoveAt(index);
+                return Task.FromResult(true);
+            }
         }
 
         public async Task<IList<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IQueryable<TEntity>> clauses = null, FeedOptions feedOptions = null)
@@ -171,7 +186,28 @@ namespace CosmosDbRepository.Substitute
 
         public Task<TEntity> ReplaceAsync(TEntity entity, RequestOptions requestOptions = null)
         {
-            throw new NotImplementedException();
+            var item = new EntityStorage(entity);
+
+            lock (_entities)
+            {
+                var index = _entities.FindIndex(d => d.Id == item.Id);
+
+                if (index < 0)
+                {
+                    throw CreateDbException(HttpStatusCode.NotFound, "Not Found");
+                }
+
+                if (CheckETag(entity, _entities[index], out var exception))
+                    return Task.FromException<TEntity>(exception);
+
+                _entities.RemoveAt(index);
+
+                item.ETag = $"\"{Guid.NewGuid()}\"";
+                item.TS = DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond;
+                _entities.Add(item);
+            }
+
+            return Task.FromResult(DeepClone(item.Entity));
         }
 
         public async Task<IList<U>> SelectAsync<U>(Expression<Func<TEntity, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
@@ -394,10 +430,18 @@ namespace CosmosDbRepository.Substitute
 
             lock (_entities)
             {
+                var index = _entities.FindIndex(d => d.Id == item.Id);
+
+                if (index >= 0)
+                {
+                    if (CheckETag(entity, _entities[index], out var exception))
+                        return Task.FromException<TEntity>(exception);
+
+                    _entities.RemoveAt(index);
+                }
 
                 item.ETag = $"\"{Guid.NewGuid()}\"";
-
-                _entities.RemoveAll(cfg => cfg.Id == item.Id);
+                item.TS = DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond;
                 _entities.Add(item);
             }
 
@@ -417,6 +461,8 @@ namespace CosmosDbRepository.Substitute
             private static readonly Func<TEntity, string> GetETag;
             private static readonly Func<TEntity, string> GetId;
             private static readonly Action<TEntity, string> SetId;
+            private static readonly Func<TEntity, long> GetTS;
+            private static readonly Action<TEntity, long> SetTS;
 
             public readonly TEntity Entity;
 
@@ -432,6 +478,12 @@ namespace CosmosDbRepository.Substitute
                 set => SetETag(Entity, value);
             }
 
+            public long TS
+            {
+                get => GetTS(Entity);
+                set => SetTS(Entity, value);
+            }
+
             static EntityStorage()
             {
                 (string name, PropertyInfo info) GetPropertyJsonName(PropertyInfo pi)
@@ -443,13 +495,18 @@ namespace CosmosDbRepository.Substitute
                 var properties = typeof(TEntity).GetProperties().Select(GetPropertyJsonName).ToDictionary(o => o.name, o => o.info);
 
                 var idProperty = properties["id"];
-                GetId = BuildIdGet(idProperty);
-                SetId = BuildIdSet(idProperty);
+                GetId = BuildIdGet(idProperty, true);
+                SetId = BuildIdSet(idProperty, true);
 
                 properties.TryGetValue("_etag", out var eTagProperty);
 
-                GetETag = BuildIdGet(eTagProperty);
-                SetETag = BuildIdSet(eTagProperty);
+                GetETag = BuildIdGet(eTagProperty, false);
+                SetETag = BuildIdSet(eTagProperty, false);
+
+                properties.TryGetValue("_ts", out var tsProperty);
+
+                GetTS = BuildTSGet(tsProperty);
+                SetTS = BuildTSSet(tsProperty);
             }
 
             public EntityStorage(TEntity entity)
@@ -457,8 +514,16 @@ namespace CosmosDbRepository.Substitute
                 Entity = DeepClone(entity);
             }
 
-            private static Func<TEntity, string> BuildIdGet(PropertyInfo idProperty)
+            private static Func<TEntity, string> BuildIdGet(PropertyInfo idProperty, bool required)
             {
+                if (idProperty == default)
+                {
+                    if (required)
+                        throw new InvalidOperationException("Missing field");
+
+                    return _ => default;
+                }
+
                 var source = Expression.Parameter(typeof(TEntity), "source");
                 Expression IdProperty = Expression.Property(source, idProperty);
 
@@ -470,8 +535,16 @@ namespace CosmosDbRepository.Substitute
                 return Expression.Lambda<Func<TEntity, string>>(IdProperty, source).Compile();
             }
 
-            private static Action<TEntity, string> BuildIdSet(PropertyInfo idProperty)
+            private static Action<TEntity, string> BuildIdSet(PropertyInfo idProperty, bool required)
             {
+                if (idProperty == default)
+                {
+                    if (required)
+                        throw new InvalidOperationException("Missing field");
+
+                    return (_, __) => { };
+                }
+
                 if (!idProperty.CanWrite)
                 {
                     return (_, __) => throw new InvalidOperationException("The id property is not assignable");
@@ -488,6 +561,47 @@ namespace CosmosDbRepository.Substitute
                     : Expression.Assign(IdProperty, value);
 
                 return Expression.Lambda<Action<TEntity, string>>(body, source, value).Compile();
+
+            }
+            private static Func<TEntity, long> BuildTSGet(PropertyInfo idProperty)
+            {
+                if (idProperty == default)
+                {
+                    return _ => 0;
+                }
+
+                if (idProperty.PropertyType != typeof(long))
+                {
+                    throw new InvalidOperationException("_ts is not type long");
+                }
+
+                var source = Expression.Parameter(typeof(TEntity), "source");
+                Expression IdProperty = Expression.Property(source, idProperty);
+
+                return Expression.Lambda<Func<TEntity, long>>(IdProperty, source).Compile();
+            }
+
+            private static Action<TEntity, long> BuildTSSet(PropertyInfo idProperty)
+            {
+                if (idProperty == default)
+                {
+                    return (_, __) => { };
+                }
+
+                if (!idProperty.CanWrite)
+                {
+                    return (_, __) => throw new InvalidOperationException("The id property is not assignable");
+                }
+
+                var source = Expression.Parameter(typeof(TEntity), "source");
+                var value = Expression.Parameter(typeof(long), "value");
+
+
+                Expression IdProperty = Expression.Property(source, idProperty);
+
+                var body = Expression.Assign(IdProperty, value);
+
+                return Expression.Lambda<Action<TEntity, long>>(body, source, value).Compile();
             }
         }
 
@@ -498,6 +612,18 @@ namespace CosmosDbRepository.Substitute
             _dbExceptionType.GetField("_message", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(ex, message);
 
             return ex;
+        }
+
+        private bool CheckETag(TEntity item, EntityStorage entity, out DocumentClientException exception)
+        {
+            if (new EntityStorage(item).ETag != entity.ETag)
+            {
+                exception = CreateDbException(HttpStatusCode.PreconditionFailed, "ETag mismatch");
+                return true;
+            }
+
+            exception = default;
+            return false;
         }
     }
 }
