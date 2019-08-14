@@ -13,21 +13,30 @@ using System.Threading.Tasks;
 
 namespace CosmosDbRepository.Substitute
 {
-    public class CosmosDbRepositorySubstitute<TEntity>
-        : ICosmosDbRepository<TEntity>
+    public class CosmosDbRepositorySubstitute<T>
+        : ICosmosDbRepository<T>
     {
         private readonly List<EntityStorage> _entities = new List<EntityStorage>();
+        private readonly List<Func<T, DocumentClientException>> _addExceptionConditions = new List<Func<T, DocumentClientException>>();
         private readonly List<Func<DocumentId, DocumentClientException>> _getExceptionConditions = new List<Func<DocumentId, DocumentClientException>>();
+        private readonly List<Func<DocumentClientException>> _countExceptionConditions = new List<Func<DocumentClientException>>();
         private static readonly Type _dbExceptionType = typeof(DocumentClientException);
 
         public string Id => throw new NotImplementedException();
 
-        public Type Type => typeof(TEntity);
+        public Type Type => typeof(T);
 
         public Task<string> AltLink => throw new NotImplementedException();
 
-        public Task<TEntity> AddAsync(TEntity entity, RequestOptions requestOptions = null)
+        public Task<T> AddAsync(T entity, RequestOptions requestOptions = null)
         {
+            var failure = _addExceptionConditions.Select(func => func(entity)).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<T>(failure);
+            }
+
             var item = new EntityStorage(entity);
 
             if (string.IsNullOrEmpty(item.Id))
@@ -46,9 +55,16 @@ namespace CosmosDbRepository.Substitute
             return Task.FromResult(DeepClone(item.Entity));
         }
 
-        public Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IQueryable<TEntity>> clauses = null, FeedOptions feedOptions = null)
+        public Task<int> CountAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
-            IEnumerable<TEntity> entities;
+            var failure = _countExceptionConditions.Select(func => func()).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<int>(failure);
+            }
+
+            IEnumerable<T> entities;
 
             lock (_entities)
             {
@@ -81,7 +97,7 @@ namespace CosmosDbRepository.Substitute
             return Task.FromResult(result);
         }
 
-        public Task<bool> DeleteDocumentAsync(TEntity entity, RequestOptions requestOptions = null)
+        public Task<bool> DeleteDocumentAsync(T entity, RequestOptions requestOptions = null)
         {
             var item = new EntityStorage(entity);
 
@@ -102,15 +118,15 @@ namespace CosmosDbRepository.Substitute
             }
         }
 
-        public async Task<IList<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IQueryable<TEntity>> clauses = null, FeedOptions feedOptions = null)
+        public async Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             var result = await FindAsync(feedOptions?.MaxItemCount ?? 0, null, predicate, clauses, feedOptions);
             return result.Items;
         }
 
-        public Task<CosmosDbRepositoryPagedResults<TEntity>> FindAsync(int pageSize, string continuationToken, Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IQueryable<TEntity>> clauses = null, FeedOptions feedOptions = null)
+        public Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
-            IEnumerable<TEntity> entities;
+            IEnumerable<T> entities;
 
             if (string.IsNullOrEmpty(continuationToken))
             {
@@ -121,7 +137,7 @@ namespace CosmosDbRepository.Substitute
             }
             else
             {
-                entities = JsonConvert.DeserializeObject<TEntity[]>(continuationToken);
+                entities = JsonConvert.DeserializeObject<T[]>(continuationToken);
             }
 
             if (predicate != default)
@@ -130,7 +146,7 @@ namespace CosmosDbRepository.Substitute
             if (clauses != default)
                 entities = clauses.Invoke(entities.AsQueryable());
 
-            var result = new CosmosDbRepositoryPagedResults<TEntity>()
+            var result = new CosmosDbRepositoryPagedResults<T>()
             {
                 Items = entities.Select(DeepClone).ToList()
             };
@@ -144,9 +160,9 @@ namespace CosmosDbRepository.Substitute
             return Task.FromResult(result);
         }
 
-        public Task<TEntity> FindFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IQueryable<TEntity>> clauses = null, FeedOptions feedOptions = null)
+        public Task<T> FindFirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
-            IEnumerable<TEntity> entities;
+            IEnumerable<T> entities;
 
             lock (_entities)
             {
@@ -162,22 +178,22 @@ namespace CosmosDbRepository.Substitute
             return Task.FromResult(entities.FirstOrDefault());
         }
 
-        public Task<TEntity> GetAsync(TEntity entity, RequestOptions requestOptions = null)
+        public Task<T> GetAsync(T entity, RequestOptions requestOptions = null)
         {
             var item = new EntityStorage(entity);
             return GetAsync(item.Id, requestOptions);
         }
 
-        public Task<TEntity> GetAsync(DocumentId itemId, RequestOptions requestOptions = null)
+        public Task<T> GetAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
-            EntityStorage item;
-
             var failure = _getExceptionConditions.Select(func => func(itemId)).FirstOrDefault();
 
             if (failure != default)
             {
-                return Task.FromException<TEntity>(failure);
+                return Task.FromException<T>(failure);
             }
+
+            EntityStorage item;
 
             lock (_entities)
             {
@@ -192,7 +208,7 @@ namespace CosmosDbRepository.Substitute
             throw new NotImplementedException();
         }
 
-        public Task<TEntity> ReplaceAsync(TEntity entity, RequestOptions requestOptions = null)
+        public Task<T> ReplaceAsync(T entity, RequestOptions requestOptions = null)
         {
             var item = new EntityStorage(entity);
 
@@ -206,7 +222,7 @@ namespace CosmosDbRepository.Substitute
                 }
 
                 if (CheckETag(entity, _entities[index], out var exception))
-                    return Task.FromException<TEntity>(exception);
+                    return Task.FromException<T>(exception);
 
                 _entities.RemoveAt(index);
 
@@ -218,15 +234,15 @@ namespace CosmosDbRepository.Substitute
             return Task.FromResult(DeepClone(item.Entity));
         }
 
-        public async Task<IList<U>> SelectAsync<U>(Expression<Func<TEntity, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public async Task<IList<U>> SelectAsync<U>(Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             var result = await SelectAsync(feedOptions?.MaxItemCount ?? 0, default, selector, selectClauses, feedOptions);
             return result.Items;
         }
 
-        public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, Expression<Func<TEntity, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
-            IEnumerable<TEntity> entities;
+            IEnumerable<T> entities;
 
             if (string.IsNullOrEmpty(continuationToken))
             {
@@ -237,7 +253,7 @@ namespace CosmosDbRepository.Substitute
             }
             else
             {
-                entities = JsonConvert.DeserializeObject<TEntity[]>(continuationToken);
+                entities = JsonConvert.DeserializeObject<T[]>(continuationToken);
             }
 
             var items = entities.Select(selector.Compile());
@@ -259,15 +275,15 @@ namespace CosmosDbRepository.Substitute
             return Task.FromResult(result);
         }
 
-        public async Task<IList<U>> SelectAsync<U, V>(Expression<Func<V, U>> selector, Func<IQueryable<TEntity>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public async Task<IList<U>> SelectAsync<U, V>(Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             var result = await SelectAsync(feedOptions?.MaxItemCount ?? 0, default, selector, whereClauses, selectClauses, feedOptions);
             return result.Items;
         }
 
-        public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U, V>(int pageSize, string continuationToken, Expression<Func<V, U>> selector, Func<IQueryable<TEntity>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U, V>(int pageSize, string continuationToken, Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
-            IEnumerable<TEntity> entities;
+            IEnumerable<T> entities;
 
             if (string.IsNullOrEmpty(continuationToken))
             {
@@ -278,7 +294,7 @@ namespace CosmosDbRepository.Substitute
             }
             else
             {
-                entities = JsonConvert.DeserializeObject<TEntity[]>(continuationToken);
+                entities = JsonConvert.DeserializeObject<T[]>(continuationToken);
             }
 
             var items = whereClauses.Invoke(entities.AsQueryable()).Select(selector.Compile());
@@ -300,15 +316,15 @@ namespace CosmosDbRepository.Substitute
             return Task.FromResult(result);
         }
 
-        public async Task<IList<U>> SelectManyAsync<U>(Expression<Func<TEntity, IEnumerable<U>>> selector, Func<IQueryable<TEntity>, IQueryable<TEntity>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public async Task<IList<U>> SelectManyAsync<U>(Expression<Func<T, IEnumerable<U>>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             var result = await SelectManyAsync(feedOptions?.MaxItemCount ?? 0, default, selector, whereClauses, selectClauses, feedOptions);
             return result.Items;
         }
 
-        public Task<CosmosDbRepositoryPagedResults<U>> SelectManyAsync<U>(int pageSize, string continuationToken, Expression<Func<TEntity, IEnumerable<U>>> selector, Func<IQueryable<TEntity>, IQueryable<TEntity>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public Task<CosmosDbRepositoryPagedResults<U>> SelectManyAsync<U>(int pageSize, string continuationToken, Expression<Func<T, IEnumerable<U>>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
-            IEnumerable<TEntity> entities;
+            IEnumerable<T> entities;
 
             if (string.IsNullOrEmpty(continuationToken))
             {
@@ -319,7 +335,7 @@ namespace CosmosDbRepository.Substitute
             }
             else
             {
-                entities = JsonConvert.DeserializeObject<TEntity[]>(continuationToken);
+                entities = JsonConvert.DeserializeObject<T[]>(continuationToken);
             }
 
             if (whereClauses != default)
@@ -429,7 +445,7 @@ namespace CosmosDbRepository.Substitute
             throw new NotImplementedException();
         }
 
-        public Task<TEntity> UpsertAsync(TEntity entity, RequestOptions requestOptions = null)
+        public Task<T> UpsertAsync(T entity, RequestOptions requestOptions = null)
         {
             var item = new EntityStorage(entity);
 
@@ -443,7 +459,7 @@ namespace CosmosDbRepository.Substitute
                 if (index >= 0)
                 {
                     if (CheckETag(entity, _entities[index], out var exception))
-                        return Task.FromException<TEntity>(exception);
+                        return Task.FromException<T>(exception);
 
                     _entities.RemoveAt(index);
                 }
@@ -456,33 +472,53 @@ namespace CosmosDbRepository.Substitute
             return Task.FromResult(DeepClone(item.Entity));
         }
 
-        public void GenerateExceptionOnGetWhen(Predicate<DocumentId> predicate, HttpStatusCode statusCode, string message = default)
+        internal void GenerateExceptionOnGetWhen(Predicate<DocumentId> predicate, HttpStatusCode statusCode, string message = default)
         {
             _getExceptionConditions.Add(id => predicate(id) ? CreateDbException(statusCode, message) : default);
         }
 
-        public void ClearGenerateExceptionOnGet()
+        internal void ClearGenerateExceptionOnGet()
         {
             _getExceptionConditions.Clear();
         }
 
-        private static TEntity DeepClone(TEntity src)
+        internal void GenerateExceptionOnAddWhen(Predicate<T> predicate, HttpStatusCode statusCode, string message = default)
+        {
+            _addExceptionConditions.Add(entity => predicate(entity) ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void ClearGenerateExceptionOnAdd()
+        {
+            _addExceptionConditions.Clear();
+        }
+
+        internal void GenerateExceptionOnCountWhen(Func<bool> predicate, HttpStatusCode statusCode, string message = default)
+        {
+            _countExceptionConditions.Add(() => predicate() ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void ClearGenerateExceptionOnCount()
+        {
+            _addExceptionConditions.Clear();
+        }
+
+        private static T DeepClone(T src)
         {
             return (src == default)
                 ? default
-                : JsonConvert.DeserializeObject<TEntity>(JsonConvert.SerializeObject(src));
+                : JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(src));
         }
 
         private class EntityStorage
         {
-            private static readonly Action<TEntity, string> SetETag;
-            private static readonly Func<TEntity, string> GetETag;
-            private static readonly Func<TEntity, string> GetId;
-            private static readonly Action<TEntity, string> SetId;
-            private static readonly Func<TEntity, long> GetTS;
-            private static readonly Action<TEntity, long> SetTS;
+            private static readonly Action<T, string> SetETag;
+            private static readonly Func<T, string> GetETag;
+            private static readonly Func<T, string> GetId;
+            private static readonly Action<T, string> SetId;
+            private static readonly Func<T, long> GetTS;
+            private static readonly Action<T, long> SetTS;
 
-            public readonly TEntity Entity;
+            public readonly T Entity;
 
             public string Id
             {
@@ -510,7 +546,7 @@ namespace CosmosDbRepository.Substitute
                     return (jsonProperty?.PropertyName ?? pi.Name, pi);
                 }
 
-                var properties = typeof(TEntity).GetProperties().Select(GetPropertyJsonName).ToDictionary(o => o.name, o => o.info);
+                var properties = typeof(T).GetProperties().Select(GetPropertyJsonName).ToDictionary(o => o.name, o => o.info);
 
                 var idProperty = properties["id"];
                 GetId = BuildIdGet(idProperty, true);
@@ -527,12 +563,12 @@ namespace CosmosDbRepository.Substitute
                 SetTS = BuildTSSet(tsProperty);
             }
 
-            public EntityStorage(TEntity entity)
+            public EntityStorage(T entity)
             {
                 Entity = DeepClone(entity);
             }
 
-            private static Func<TEntity, string> BuildIdGet(PropertyInfo idProperty, bool required)
+            private static Func<T, string> BuildIdGet(PropertyInfo idProperty, bool required)
             {
                 if (idProperty == default)
                 {
@@ -542,7 +578,7 @@ namespace CosmosDbRepository.Substitute
                     return _ => default;
                 }
 
-                var source = Expression.Parameter(typeof(TEntity), "source");
+                var source = Expression.Parameter(typeof(T), "source");
                 Expression IdProperty = Expression.Property(source, idProperty);
 
                 if (idProperty.PropertyType != typeof(string))
@@ -550,10 +586,10 @@ namespace CosmosDbRepository.Substitute
                     IdProperty = Expression.Call(IdProperty, "ToString", new Type[0]);
                 }
 
-                return Expression.Lambda<Func<TEntity, string>>(IdProperty, source).Compile();
+                return Expression.Lambda<Func<T, string>>(IdProperty, source).Compile();
             }
 
-            private static Action<TEntity, string> BuildIdSet(PropertyInfo idProperty, bool required)
+            private static Action<T, string> BuildIdSet(PropertyInfo idProperty, bool required)
             {
                 if (idProperty == default)
                 {
@@ -568,7 +604,7 @@ namespace CosmosDbRepository.Substitute
                     return (_, __) => throw new InvalidOperationException("The id property is not assignable");
                 }
 
-                var source = Expression.Parameter(typeof(TEntity), "source");
+                var source = Expression.Parameter(typeof(T), "source");
                 var value = Expression.Parameter(typeof(string), "value");
 
 
@@ -578,10 +614,10 @@ namespace CosmosDbRepository.Substitute
                     ? Expression.Assign(IdProperty, Expression.Call(idProperty.PropertyType.GetMethod("Parse", new[] { typeof(string) }), value))
                     : Expression.Assign(IdProperty, value);
 
-                return Expression.Lambda<Action<TEntity, string>>(body, source, value).Compile();
+                return Expression.Lambda<Action<T, string>>(body, source, value).Compile();
 
             }
-            private static Func<TEntity, long> BuildTSGet(PropertyInfo idProperty)
+            private static Func<T, long> BuildTSGet(PropertyInfo idProperty)
             {
                 if (idProperty == default)
                 {
@@ -593,13 +629,13 @@ namespace CosmosDbRepository.Substitute
                     throw new InvalidOperationException("_ts is not type long");
                 }
 
-                var source = Expression.Parameter(typeof(TEntity), "source");
+                var source = Expression.Parameter(typeof(T), "source");
                 Expression IdProperty = Expression.Property(source, idProperty);
 
-                return Expression.Lambda<Func<TEntity, long>>(IdProperty, source).Compile();
+                return Expression.Lambda<Func<T, long>>(IdProperty, source).Compile();
             }
 
-            private static Action<TEntity, long> BuildTSSet(PropertyInfo idProperty)
+            private static Action<T, long> BuildTSSet(PropertyInfo idProperty)
             {
                 if (idProperty == default)
                 {
@@ -611,7 +647,7 @@ namespace CosmosDbRepository.Substitute
                     return (_, __) => throw new InvalidOperationException("The id property is not assignable");
                 }
 
-                var source = Expression.Parameter(typeof(TEntity), "source");
+                var source = Expression.Parameter(typeof(T), "source");
                 var value = Expression.Parameter(typeof(long), "value");
 
 
@@ -619,7 +655,7 @@ namespace CosmosDbRepository.Substitute
 
                 var body = Expression.Assign(IdProperty, value);
 
-                return Expression.Lambda<Action<TEntity, long>>(body, source, value).Compile();
+                return Expression.Lambda<Action<T, long>>(body, source, value).Compile();
             }
         }
 
@@ -632,7 +668,7 @@ namespace CosmosDbRepository.Substitute
             return ex;
         }
 
-        private bool CheckETag(TEntity item, EntityStorage entity, out DocumentClientException exception)
+        private bool CheckETag(T item, EntityStorage entity, out DocumentClientException exception)
         {
             if (new EntityStorage(item).ETag != entity.ETag)
             {
