@@ -17,6 +17,7 @@ namespace CosmosDbRepository.Substitute
         : ICosmosDbRepository<TEntity>
     {
         private readonly List<EntityStorage> _entities = new List<EntityStorage>();
+        private readonly List<Func<DocumentId, DocumentClientException>> _getExceptionConditions = new List<Func<DocumentId, DocumentClientException>>();
         private static readonly Type _dbExceptionType = typeof(DocumentClientException);
 
         public string Id => throw new NotImplementedException();
@@ -170,6 +171,13 @@ namespace CosmosDbRepository.Substitute
         public Task<TEntity> GetAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
             EntityStorage item;
+
+            var failure = _getExceptionConditions.Select(func => func(itemId)).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<TEntity>(failure);
+            }
 
             lock (_entities)
             {
@@ -448,6 +456,16 @@ namespace CosmosDbRepository.Substitute
             return Task.FromResult(DeepClone(item.Entity));
         }
 
+        public void GenerateExceptionOnGetWhen(Predicate<DocumentId> predicate, HttpStatusCode statusCode, string message = default)
+        {
+            _getExceptionConditions.Add(id => predicate(id) ? CreateDbException(statusCode, message) : default);
+        }
+
+        public void ClearGenerateExceptionOnGet()
+        {
+            _getExceptionConditions.Clear();
+        }
+
         private static TEntity DeepClone(TEntity src)
         {
             return (src == default)
@@ -605,7 +623,7 @@ namespace CosmosDbRepository.Substitute
             }
         }
 
-        private static DocumentClientException CreateDbException(HttpStatusCode statusCode, string message = null)
+        private static DocumentClientException CreateDbException(HttpStatusCode statusCode, string message = default)
         {
             var ex = (DocumentClientException)FormatterServices.GetUninitializedObject(_dbExceptionType);
             _dbExceptionType.GetProperty("StatusCode").SetValue(ex, statusCode);
