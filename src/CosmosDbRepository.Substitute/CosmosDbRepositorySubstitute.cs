@@ -18,7 +18,14 @@ namespace CosmosDbRepository.Substitute
     {
         private readonly List<EntityStorage> _entities = new List<EntityStorage>();
         private readonly List<Func<T, DocumentClientException>> _addExceptionConditions = new List<Func<T, DocumentClientException>>();
-        private readonly List<Func<DocumentId, DocumentClientException>> _getExceptionConditions = new List<Func<DocumentId, DocumentClientException>>();
+        private readonly List<Func<object, DocumentClientException>> _getExceptionConditions = new List<Func<object, DocumentClientException>>();
+        private readonly List<Func<object, DocumentClientException>> _deleteExceptionConditions = new List<Func<object, DocumentClientException>>();
+        private readonly List<Func<DocumentClientException>> _findExceptionConditions = new List<Func<DocumentClientException>>();
+        private readonly List<Func<DocumentClientException>> _findFirstOrDefaultExceptionConditions = new List<Func<DocumentClientException>>();
+        private readonly List<Func<T, DocumentClientException>> _replaceExceptionConditions = new List<Func<T, DocumentClientException>>();
+        private readonly List<Func<DocumentClientException>> _selectExceptionConditions = new List<Func<DocumentClientException>>();
+        private readonly List<Func<DocumentClientException>> _selectManyExceptionConditions = new List<Func<DocumentClientException>>();
+        private readonly List<Func<T, DocumentClientException>> _upsertExceptionConditions = new List<Func<T, DocumentClientException>>();
         private readonly List<Func<DocumentClientException>> _countExceptionConditions = new List<Func<DocumentClientException>>();
         private static readonly Type _dbExceptionType = typeof(DocumentClientException);
 
@@ -87,6 +94,13 @@ namespace CosmosDbRepository.Substitute
 
         public Task<bool> DeleteDocumentAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
+            var failure = _deleteExceptionConditions.Select(func => func(itemId)).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<bool>(failure);
+            }
+
             bool result;
 
             lock (_entities)
@@ -100,6 +114,14 @@ namespace CosmosDbRepository.Substitute
         public Task<bool> DeleteDocumentAsync(T entity, RequestOptions requestOptions = null)
         {
             var item = new EntityStorage(entity);
+
+            var failure = _deleteExceptionConditions.Select(func => func(entity)).FirstOrDefault() ??
+                          _deleteExceptionConditions.Select(func => func(item.Id)).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<bool>(failure);
+            }
 
             lock (_entities)
             {
@@ -126,6 +148,13 @@ namespace CosmosDbRepository.Substitute
 
         public Task<CosmosDbRepositoryPagedResults<T>> FindAsync(int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
+            var failure = _findExceptionConditions.Select(func => func()).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<CosmosDbRepositoryPagedResults<T>>(failure);
+            }
+
             IEnumerable<T> entities;
 
             if (string.IsNullOrEmpty(continuationToken))
@@ -162,6 +191,13 @@ namespace CosmosDbRepository.Substitute
 
         public Task<T> FindFirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
+            var failure = _findFirstOrDefaultExceptionConditions.Select(func => func()).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<T>(failure);
+            }
+
             IEnumerable<T> entities;
 
             lock (_entities)
@@ -180,6 +216,13 @@ namespace CosmosDbRepository.Substitute
 
         public Task<T> GetAsync(T entity, RequestOptions requestOptions = null)
         {
+            var failure = _getExceptionConditions.Select(func => func(entity)).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<T>(failure);
+            }
+
             var item = new EntityStorage(entity);
             return GetAsync(item.Id, requestOptions);
         }
@@ -210,6 +253,13 @@ namespace CosmosDbRepository.Substitute
 
         public Task<T> ReplaceAsync(T entity, RequestOptions requestOptions = null)
         {
+            var failure = _replaceExceptionConditions.Select(func => func(entity)).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<T>(failure);
+            }
+
             var item = new EntityStorage(entity);
 
             lock (_entities)
@@ -242,6 +292,13 @@ namespace CosmosDbRepository.Substitute
 
         public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
+            var failure = _selectExceptionConditions.Select(func => func()).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
+            }
+
             IEnumerable<T> entities;
 
             if (string.IsNullOrEmpty(continuationToken))
@@ -283,6 +340,13 @@ namespace CosmosDbRepository.Substitute
 
         public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U, V>(int pageSize, string continuationToken, Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
+            var failure = _selectExceptionConditions.Select(func => func()).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
+            }
+
             IEnumerable<T> entities;
 
             if (string.IsNullOrEmpty(continuationToken))
@@ -324,6 +388,13 @@ namespace CosmosDbRepository.Substitute
 
         public Task<CosmosDbRepositoryPagedResults<U>> SelectManyAsync<U>(int pageSize, string continuationToken, Expression<Func<T, IEnumerable<U>>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
+            var failure = _selectManyExceptionConditions.Select(func => func()).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
+            }
+
             IEnumerable<T> entities;
 
             if (string.IsNullOrEmpty(continuationToken))
@@ -358,6 +429,40 @@ namespace CosmosDbRepository.Substitute
             }
 
             return Task.FromResult(result);
+        }
+
+        public Task<T> UpsertAsync(T entity, RequestOptions requestOptions = null)
+        {
+            var failure = _upsertExceptionConditions.Select(func => func(entity)).FirstOrDefault();
+
+            if (failure != default)
+            {
+                return Task.FromException<T>(failure);
+            }
+
+            var item = new EntityStorage(entity);
+
+            if (string.IsNullOrEmpty(item.Id))
+                item.Id = Guid.NewGuid().ToString();
+
+            lock (_entities)
+            {
+                var index = _entities.FindIndex(d => d.Id == item.Id);
+
+                if (index >= 0)
+                {
+                    if (CheckETag(entity, _entities[index], out var exception))
+                        return Task.FromException<T>(exception);
+
+                    _entities.RemoveAt(index);
+                }
+
+                item.ETag = $"\"{Guid.NewGuid()}\"";
+                item.TS = DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond;
+                _entities.Add(item);
+            }
+
+            return Task.FromResult(DeepClone(item.Entity));
         }
 
         public IStoredProcedure<TResult> StoredProcedure<TResult>(string id)
@@ -445,36 +550,22 @@ namespace CosmosDbRepository.Substitute
             throw new NotImplementedException();
         }
 
-        public Task<T> UpsertAsync(T entity, RequestOptions requestOptions = null)
+        internal void GenerateExceptionOnGetWhen(Predicate<DocumentId> predicate,
+                                                 HttpStatusCode statusCode,
+                                                 string message = default)
         {
-            var item = new EntityStorage(entity);
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (string.IsNullOrEmpty(item.Id))
-                item.Id = Guid.NewGuid().ToString();
-
-            lock (_entities)
-            {
-                var index = _entities.FindIndex(d => d.Id == item.Id);
-
-                if (index >= 0)
-                {
-                    if (CheckETag(entity, _entities[index], out var exception))
-                        return Task.FromException<T>(exception);
-
-                    _entities.RemoveAt(index);
-                }
-
-                item.ETag = $"\"{Guid.NewGuid()}\"";
-                item.TS = DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond;
-                _entities.Add(item);
-            }
-
-            return Task.FromResult(DeepClone(item.Entity));
+            _getExceptionConditions.Add(id => id is DocumentId && predicate((DocumentId)id) ? CreateDbException(statusCode, message) : default);
         }
 
-        internal void GenerateExceptionOnGetWhen(Predicate<DocumentId> predicate, HttpStatusCode statusCode, string message = default)
+        internal void GenerateExceptionOnGetWhen(Predicate<T> predicate,
+                                                 HttpStatusCode statusCode,
+                                                 string message = default)
         {
-            _getExceptionConditions.Add(id => predicate(id) ? CreateDbException(statusCode, message) : default);
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            _getExceptionConditions.Add(entity => entity is T && predicate((T)entity) ? CreateDbException(statusCode, message) : default);
         }
 
         internal void ClearGenerateExceptionOnGet()
@@ -482,8 +573,12 @@ namespace CosmosDbRepository.Substitute
             _getExceptionConditions.Clear();
         }
 
-        internal void GenerateExceptionOnAddWhen(Predicate<T> predicate, HttpStatusCode statusCode, string message = default)
+        internal void GenerateExceptionOnAddWhen(Predicate<T> predicate,
+                                                 HttpStatusCode statusCode,
+                                                 string message = default)
         {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
             _addExceptionConditions.Add(entity => predicate(entity) ? CreateDbException(statusCode, message) : default);
         }
 
@@ -492,14 +587,111 @@ namespace CosmosDbRepository.Substitute
             _addExceptionConditions.Clear();
         }
 
-        internal void GenerateExceptionOnCountWhen(Func<bool> predicate, HttpStatusCode statusCode, string message = default)
+        internal void GenerateExceptionOnDeleteWhen(Predicate<DocumentId> predicate,
+                                                    HttpStatusCode statusCode,
+                                                    string message = default)
         {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            _deleteExceptionConditions.Add(id => id is DocumentId && predicate((DocumentId)id) ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void GenerateExceptionOnDeleteWhen(Predicate<T> predicate,
+                                                    HttpStatusCode statusCode,
+                                                    string message = default)
+        {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            _deleteExceptionConditions.Add(entity => entity is T && predicate((T)entity) ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void ClearGenerateExceptionOnDelete()
+        {
+            _deleteExceptionConditions.Clear();
+        }
+
+        internal void GenerateExceptionOnFindWhen(Func<bool> predicate,
+                                                  HttpStatusCode statusCode,
+                                                  string message = default)
+        {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            _findExceptionConditions.Add(() => predicate() ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void ClearGenerateExceptionOnFind()
+        {
+            _findExceptionConditions.Clear();
+        }
+
+        internal void GenerateExceptionOnFindFirstOrDefaultWhen(Func<bool> predicate,
+                                                                HttpStatusCode statusCode,
+                                                                string message = default)
+        {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            _findFirstOrDefaultExceptionConditions.Add(() => predicate() ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void ClearGenerateExceptionOnFindFirstOrDefault()
+        {
+            _findFirstOrDefaultExceptionConditions.Clear();
+        }
+
+        internal void GenerateExceptionOnReplaceWhen(Predicate<T> predicate,
+                                                     HttpStatusCode statusCode,
+                                                     string message = default)
+        {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            _replaceExceptionConditions.Add(entity => entity is T && predicate((T)entity) ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void ClearGenerateExceptionOnReplace()
+        {
+            _replaceExceptionConditions.Clear();
+        }
+
+        internal void GenerateExceptionOnSelectWhen(Func<bool> predicate,
+                                                    HttpStatusCode statusCode,
+                                                    string message = default)
+        {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            _selectExceptionConditions.Add(() => predicate() ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void ClearGenerateExceptionOnSelect()
+        {
+            _selectExceptionConditions.Clear();
+        }
+
+        internal void GenerateExceptionOnSelectManyWhen(Func<bool> predicate,
+                                                        HttpStatusCode statusCode,
+                                                        string message = default)
+        {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            _selectManyExceptionConditions.Add(() => predicate() ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void ClearGenerateExceptionOnSelectMany()
+        {
+            _selectManyExceptionConditions.Clear();
+        }
+
+        internal void GenerateExceptionOnCountWhen(Func<bool> predicate,
+                                                   HttpStatusCode statusCode,
+                                                   string message = default)
+        {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
             _countExceptionConditions.Add(() => predicate() ? CreateDbException(statusCode, message) : default);
         }
 
         internal void ClearGenerateExceptionOnCount()
         {
-            _addExceptionConditions.Clear();
+            _countExceptionConditions.Clear();
         }
 
         private static T DeepClone(T src)
