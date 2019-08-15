@@ -108,6 +108,9 @@ namespace CosmosDbRepository.Substitute
                 result = _entities.RemoveAll(cfg => cfg.Id == itemId) > 0;
             }
 
+            if (result == default)
+                return Task.FromException<bool>(CreateDbException(HttpStatusCode.NotFound));
+
             return Task.FromResult(result);
         }
 
@@ -129,7 +132,7 @@ namespace CosmosDbRepository.Substitute
 
                 if (index < 0)
                 {
-                    return Task.FromResult(false);
+                    return Task.FromException<bool>(CreateDbException(HttpStatusCode.NotFound));
                 }
 
                 if (CheckETag(entity, _entities[index], out var exception))
