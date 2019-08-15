@@ -644,7 +644,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            _replaceExceptionConditions.Add(entity => entity is T && predicate((T)entity) ? CreateDbException(statusCode, message) : default);
+            _replaceExceptionConditions.Add(entity => predicate(entity) ? CreateDbException(statusCode, message) : default);
         }
 
         internal void ClearGenerateExceptionOnReplace()
@@ -678,6 +678,20 @@ namespace CosmosDbRepository.Substitute
         internal void ClearGenerateExceptionOnSelectMany()
         {
             _selectManyExceptionConditions.Clear();
+        }
+
+        internal void GenerateExceptionOnUpsertWhen(Predicate<T> predicate,
+                                                     HttpStatusCode statusCode,
+                                                     string message = default)
+        {
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            _upsertExceptionConditions.Add(entity => predicate(entity) ? CreateDbException(statusCode, message) : default);
+        }
+
+        internal void ClearGenerateExceptionOnUpsert()
+        {
+            _upsertExceptionConditions.Clear();
         }
 
         internal void GenerateExceptionOnCountWhen(Func<bool> predicate,

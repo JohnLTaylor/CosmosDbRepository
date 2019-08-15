@@ -226,6 +226,30 @@ namespace CosmosDbRepository.Substitute
             substitute.ClearGenerateExceptionOnSelectMany();
         }
 
+        public static void GenerateExceptionOnUpsertWhen<T>(this ICosmosDbRepository<T> self,
+                                                             Predicate<T> predicate,
+                                                             HttpStatusCode statusCode,
+                                                             string message = default)
+        {
+            if (self is null) throw new ArgumentNullException(nameof(self));
+            if (predicate is null) throw new ArgumentNullException(nameof(predicate));
+
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
+                throw new ArgumentException($"self is not a CosmosDbRepositorySubstitute<{typeof(T).Name}>", nameof(self));
+
+            substitute.GenerateExceptionOnUpsertWhen(predicate, statusCode, message);
+        }
+
+        public static void ClearGenerateExceptionOnUpsert<T>(this ICosmosDbRepository<T> self)
+        {
+            if (self is null) throw new ArgumentNullException(nameof(self));
+
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
+                throw new ArgumentException($"self is not a CosmosDbRepositorySubstitute<{typeof(T).Name}>", nameof(self));
+
+            substitute.ClearGenerateExceptionOnUpsert();
+        }
+
         public static void GenerateExceptionOnCountWhen<T>(this ICosmosDbRepository<T> self,
                                                            Func<bool> predicate,
                                                            HttpStatusCode statusCode,
