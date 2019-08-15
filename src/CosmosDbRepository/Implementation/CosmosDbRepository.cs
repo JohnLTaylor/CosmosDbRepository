@@ -484,7 +484,7 @@ namespace CosmosDbRepository.Implementation
                     ? Expression.Constant(null, typeof(string))
                     : (Expression)Expression.Property(typedSource, eTagProperty);
 
-                if (eTagProperty.PropertyType != typeof(string))
+                if (eTagProperty != default && eTagProperty.PropertyType != typeof(string))
                 {
                     eTagValue = Expression.Call(eTagValue, "ToString", new Type[0]);
                 }
