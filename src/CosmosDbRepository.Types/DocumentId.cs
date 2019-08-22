@@ -18,9 +18,15 @@ namespace CosmosDbRepository.Types
 
         public static implicit operator DocumentId(string id) => new DocumentId(id);
 
+        public static explicit operator string(DocumentId id) => id.Id;
+
         public static implicit operator DocumentId(Guid id) => new DocumentId(id.ToString());
 
+        public static explicit operator Guid(DocumentId id) => Guid.Parse(id.Id);
+
         public static implicit operator DocumentId(int id) => new DocumentId(id.ToString());
+
+        public static explicit operator int(DocumentId id) => int.Parse(id.Id);
 
         public static bool operator ==(DocumentId left, DocumentId right) => left.Equals(right);
 
@@ -35,6 +41,8 @@ namespace CosmosDbRepository.Types
                     obj is Guid guidId && Equals(guidId) ||
                     obj is int intId && Equals(intId);
         }
+
+        public static bool IsNullOrEmpty(DocumentId id) => string.IsNullOrEmpty(id.Id);
 
         public override int GetHashCode()
         {

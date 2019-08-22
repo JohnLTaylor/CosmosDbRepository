@@ -1,7 +1,9 @@
+using CosmosDbRepository.Substitute;
 using FluentAssertions;
-using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -127,6 +129,62 @@ namespace CosmosDbRepositorySubstituteTest
 
             repoResult.Should().BeEquivalentTo(subResult, opt => opt.Excluding(su =>
                     Regex.IsMatch(su.SelectedMemberPath, "Item1.Message|Item1.InnerException")));
+        }
+
+        [TestMethod]
+        public async Task DeleteItemByIdWithError()
+        {
+            var data = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "My Data"
+            };
+
+            (Exception Exception, bool) subResult;
+
+            using (var context = CreateSubstituteContext())
+            {
+                var tmp = await context.Repo.AddAsync(data);
+                context.Repo.GenerateExceptionOnDeleteWhen(id => data.Id == id, HttpStatusCode.ExpectationFailed);
+                await context.Repo.ReplaceAsync(tmp);
+                subResult = await context.Repo.DeleteDocumentAsync(tmp).ContinueWith(CaptureResult);
+            }
+
+            subResult.Exception.Should().NotBeNull();
+            var aggException = subResult.Exception as AggregateException;
+            aggException.Should().NotBeNull();
+            aggException.InnerExceptions.Should().HaveCount(1);
+            var exception = aggException.InnerExceptions[0] as DocumentClientException;
+            exception.Should().NotBeNull();
+            exception.StatusCode.Should().Be(HttpStatusCode.ExpectationFailed);
+        }
+
+        [TestMethod]
+        public async Task DeleteItemByInstanceWithError()
+        {
+            var data = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "My Data"
+            };
+
+            (Exception Exception, bool) subResult;
+
+            using (var context = CreateSubstituteContext())
+            {
+                var tmp = await context.Repo.AddAsync(data);
+                context.Repo.GenerateExceptionOnDeleteWhen(inst => data.Id == inst.Id, HttpStatusCode.ExpectationFailed);
+                await context.Repo.ReplaceAsync(tmp);
+                subResult = await context.Repo.DeleteDocumentAsync(tmp).ContinueWith(CaptureResult);
+            }
+
+            subResult.Exception.Should().NotBeNull();
+            var aggException = subResult.Exception as AggregateException;
+            aggException.Should().NotBeNull();
+            aggException.InnerExceptions.Should().HaveCount(1);
+            var exception = aggException.InnerExceptions[0] as DocumentClientException;
+            exception.Should().NotBeNull();
+            exception.StatusCode.Should().Be(HttpStatusCode.ExpectationFailed);
         }
 
         [TestMethod]

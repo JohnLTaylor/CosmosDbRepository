@@ -46,7 +46,7 @@ namespace CosmosDbRepository.Substitute
 
             var item = new EntityStorage(entity);
 
-            if (string.IsNullOrEmpty(item.Id))
+            if (DocumentId.IsNullOrEmpty(item.Id))
                 item.Id = Guid.NewGuid().ToString();
 
             lock (_entities)
@@ -445,7 +445,7 @@ namespace CosmosDbRepository.Substitute
 
             var item = new EntityStorage(entity);
 
-            if (string.IsNullOrEmpty(item.Id))
+            if (DocumentId.IsNullOrEmpty(item.Id))
                 item.Id = Guid.NewGuid().ToString();
 
             lock (_entities)
@@ -722,14 +722,14 @@ namespace CosmosDbRepository.Substitute
         {
             private static readonly Action<T, string> SetETag;
             private static readonly Func<T, string> GetETag;
-            private static readonly Func<T, string> GetId;
-            private static readonly Action<T, string> SetId;
+            private static readonly Func<T, DocumentId> GetId;
+            private static readonly Action<T, DocumentId> SetId;
             private static readonly Func<T, long> GetTS;
             private static readonly Action<T, long> SetTS;
 
             public readonly T Entity;
 
-            public string Id
+            public DocumentId Id
             {
                 get => GetId(Entity);
                 set => SetId(Entity, value);
@@ -763,8 +763,8 @@ namespace CosmosDbRepository.Substitute
 
                 properties.TryGetValue("_etag", out var eTagProperty);
 
-                GetETag = BuildIdGet(eTagProperty, false);
-                SetETag = BuildIdSet(eTagProperty, false);
+                GetETag = BuildETagGet(eTagProperty, false);
+                SetETag = BuildETagSet(eTagProperty, false);
 
                 properties.TryGetValue("_ts", out var tsProperty);
 
@@ -777,7 +777,50 @@ namespace CosmosDbRepository.Substitute
                 Entity = DeepClone(entity);
             }
 
-            private static Func<T, string> BuildIdGet(PropertyInfo idProperty, bool required)
+            private static Func<T, DocumentId> BuildIdGet(PropertyInfo idProperty, bool required)
+            {
+                if (idProperty == default)
+                {
+                    if (required)
+                        throw new InvalidOperationException("Missing field");
+
+                    return _ => default;
+                }
+
+                var source = Expression.Parameter(typeof(T), "source");
+                Expression IdProperty = Expression.Property(source, idProperty);
+
+                //                var converter = typeof(DocumentId).GetMethod("op_Implicit", new[] { idProperty.PropertyType });
+                //                IdProperty = Expression.Call(converter, IdProperty);
+
+                IdProperty = Expression.Convert(IdProperty, typeof(DocumentId));
+                return Expression.Lambda<Func<T, DocumentId>>(IdProperty, source).Compile();
+            }
+
+            private static Action<T, DocumentId> BuildIdSet(PropertyInfo idProperty, bool required)
+            {
+                if (idProperty == default)
+                {
+                    if (required)
+                        throw new InvalidOperationException("Missing field");
+
+                    return (_, __) => { };
+                }
+
+                if (!idProperty.CanWrite)
+                {
+                    return (_, __) => throw new InvalidOperationException("The id property is not assignable");
+                }
+
+                var source = Expression.Parameter(typeof(T), "source");
+                var value = Expression.Parameter(typeof(DocumentId), "value");
+
+                Expression IdProperty = Expression.Property(source, idProperty);
+                var body = Expression.Assign(IdProperty, Expression.Convert(value, idProperty.PropertyType));
+                return Expression.Lambda<Action<T, DocumentId>>(body, source, value).Compile();
+            }
+
+            private static Func<T, string> BuildETagGet(PropertyInfo idProperty, bool required)
             {
                 if (idProperty == default)
                 {
@@ -798,7 +841,7 @@ namespace CosmosDbRepository.Substitute
                 return Expression.Lambda<Func<T, string>>(IdProperty, source).Compile();
             }
 
-            private static Action<T, string> BuildIdSet(PropertyInfo idProperty, bool required)
+            private static Action<T, string> BuildETagSet(PropertyInfo idProperty, bool required)
             {
                 if (idProperty == default)
                 {
@@ -826,6 +869,7 @@ namespace CosmosDbRepository.Substitute
                 return Expression.Lambda<Action<T, string>>(body, source, value).Compile();
 
             }
+
             private static Func<T, long> BuildTSGet(PropertyInfo idProperty)
             {
                 if (idProperty == default)
