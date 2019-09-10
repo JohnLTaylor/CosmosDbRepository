@@ -273,5 +273,15 @@ namespace CosmosDbRepository.Substitute
 
             substitute.ClearGenerateExceptionOnCount();
         }
+
+        public static void SetStoredProcedureHandler<T>(this ICosmosDbRepository<T> self, string id, Func<object[], object> func)
+        {
+            if (self is null) throw new ArgumentNullException(nameof(self));
+
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
+                throw new ArgumentException($"self is not a CosmosDbRepositorySubstitute<{typeof(T).Name}>", nameof(self));
+
+            substitute.SetStoredProcedureHandler(id, func);
+        }
     }
 }

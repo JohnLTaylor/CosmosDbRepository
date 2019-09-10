@@ -27,6 +27,7 @@ namespace CosmosDbRepository.Substitute
         private readonly List<Func<DocumentClientException>> _selectManyExceptionConditions = new List<Func<DocumentClientException>>();
         private readonly List<Func<T, DocumentClientException>> _upsertExceptionConditions = new List<Func<T, DocumentClientException>>();
         private readonly List<Func<DocumentClientException>> _countExceptionConditions = new List<Func<DocumentClientException>>();
+        private readonly Dictionary<string, Func<object[], object>> _storedProcedureCallback = new Dictionary<string, Func<object[], object>>();
         private static readonly Type _dbExceptionType = typeof(DocumentClientException);
 
         public string Id => throw new NotImplementedException();
@@ -470,87 +471,172 @@ namespace CosmosDbRepository.Substitute
 
         public IStoredProcedure<TResult> StoredProcedure<TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TResult>(func);
         }
 
         public IStoredProcedure<TParam, TResult> StoredProcedure<TParam, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TResult> StoredProcedure<TParam1, TParam2, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TResult> StoredProcedure<TParam1, TParam2, TParam3, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(func);
         }
 
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(string id)
         {
-            throw new NotImplementedException();
+            if (!_storedProcedureCallback.TryGetValue(id, out var func))
+            {
+                throw new ArgumentException();
+            }
+
+            return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(func);
         }
 
         internal void GenerateExceptionOnGetWhen(Predicate<DocumentId> predicate,
@@ -711,6 +797,11 @@ namespace CosmosDbRepository.Substitute
             _countExceptionConditions.Clear();
         }
 
+        internal void SetStoredProcedureHandler(string id, Func<object[], object> func)
+        {
+            _storedProcedureCallback[id] = func;
+        }
+
         private static T DeepClone(T src)
         {
             return (src == default)
@@ -789,9 +880,6 @@ namespace CosmosDbRepository.Substitute
 
                 var source = Expression.Parameter(typeof(T), "source");
                 Expression IdProperty = Expression.Property(source, idProperty);
-
-                //                var converter = typeof(DocumentId).GetMethod("op_Implicit", new[] { idProperty.PropertyType });
-                //                IdProperty = Expression.Call(converter, IdProperty);
 
                 IdProperty = Expression.Convert(IdProperty, typeof(DocumentId));
                 return Expression.Lambda<Func<T, DocumentId>>(IdProperty, source).Compile();
