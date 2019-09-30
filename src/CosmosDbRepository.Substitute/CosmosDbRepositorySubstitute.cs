@@ -303,24 +303,26 @@ namespace CosmosDbRepository.Substitute
                 return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
             }
 
-            IEnumerable<T> entities;
+            IEnumerable<U> items;
 
             if (string.IsNullOrEmpty(continuationToken))
             {
+                IEnumerable<T> entities;
+
                 lock (_entities)
                 {
                     entities = _entities.Select(i => i.Entity).ToArray();
                 }
+
+                items = entities.Select(selector.Compile());
+
+                if (selectClauses != default)
+                    items = selectClauses.Invoke(items.AsQueryable());
             }
             else
             {
-                entities = JsonConvert.DeserializeObject<T[]>(continuationToken);
+                items = JsonConvert.DeserializeObject<U[]>(continuationToken);
             }
-
-            var items = entities.Select(selector.Compile());
-
-            if (selectClauses != default)
-                items = selectClauses.Invoke(items.AsQueryable());
 
             var result = new CosmosDbRepositoryPagedResults<U>()
             {
@@ -351,24 +353,27 @@ namespace CosmosDbRepository.Substitute
                 return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
             }
 
-            IEnumerable<T> entities;
+            IEnumerable<U> items;
 
             if (string.IsNullOrEmpty(continuationToken))
             {
+                IEnumerable<T> entities;
+
                 lock (_entities)
                 {
                     entities = _entities.Select(i => i.Entity).ToArray();
                 }
+
+                items = whereClauses.Invoke(entities.AsQueryable()).Select(selector.Compile());
+
+                if (selectClauses != default)
+                    items = selectClauses.Invoke(items.AsQueryable());
+
             }
             else
             {
-                entities = JsonConvert.DeserializeObject<T[]>(continuationToken);
+                items = JsonConvert.DeserializeObject<U[]>(continuationToken);
             }
-
-            var items = whereClauses.Invoke(entities.AsQueryable()).Select(selector.Compile());
-
-            if (selectClauses != default)
-                items = selectClauses.Invoke(items.AsQueryable());
 
             var result = new CosmosDbRepositoryPagedResults<U>()
             {
@@ -399,27 +404,29 @@ namespace CosmosDbRepository.Substitute
                 return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
             }
 
-            IEnumerable<T> entities;
+            IEnumerable<U> items;
 
             if (string.IsNullOrEmpty(continuationToken))
             {
+                IEnumerable<T> entities;
+            
                 lock (_entities)
                 {
                     entities = _entities.Select(i => i.Entity).ToArray();
                 }
+
+                if (whereClauses != default)
+                    entities = whereClauses.Invoke(entities.AsQueryable());
+
+                items = entities.SelectMany(selector.Compile());
+
+                if (selectClauses != default)
+                    items = selectClauses.Invoke(items.AsQueryable());
             }
             else
             {
-                entities = JsonConvert.DeserializeObject<T[]>(continuationToken);
+                items = JsonConvert.DeserializeObject<U[]>(continuationToken);
             }
-
-            if (whereClauses != default)
-                entities = whereClauses.Invoke(entities.AsQueryable());
-
-            var items = entities.SelectMany(selector.Compile());
-
-            if (selectClauses != default)
-                items = selectClauses.Invoke(items.AsQueryable());
 
             var result = new CosmosDbRepositoryPagedResults<U>()
             {
