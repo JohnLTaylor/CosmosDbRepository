@@ -214,8 +214,41 @@ namespace CosmosDbRepositorySubstituteTest
                 subResult = await context.Repo.UpsertAsync(tmp).ContinueWith(CaptureResult);
             }
 
-            repoResult.Should().BeEquivalentTo(subResult, opt => opt.Excluding(su =>
+            subResult.Should().BeEquivalentTo(repoResult, opt => opt.Excluding(su =>
                     Regex.IsMatch(su.SelectedMemberPath, "Item1.Message|Item1.InnerException")));
+        }
+
+        [TestMethod]
+        public async Task UpsertItemWithoutETag()
+        {
+            var data = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "My Data"
+            };
+
+            (Exception Exception, TestData<Guid> Result) repoResult;
+
+            using (var context = CreateContext())
+            {
+                var tmp = await context.Repo.AddAsync(data);
+                await context.Repo.UpsertAsync(tmp);
+                tmp.ETag = default;
+                repoResult = await context.Repo.UpsertAsync(tmp).ContinueWith(CaptureResult);
+            }
+
+            (Exception Exception, TestData<Guid>) subResult;
+
+            using (var context = CreateSubstituteContext())
+            {
+                var tmp = await context.Repo.AddAsync(data);
+                await context.Repo.UpsertAsync(tmp);
+                tmp.ETag = default;
+                subResult = await context.Repo.UpsertAsync(tmp).ContinueWith(CaptureResult);
+            }
+
+            subResult.Should().BeEquivalentTo(repoResult, opt => opt.Excluding(su =>
+                    Regex.IsMatch(su.SelectedMemberPath, "Item2.ETag|Item2.UpdateEpoch")));
         }
 
         private (Exception Exception, T Result) CaptureResult<T>(Task<T> task)

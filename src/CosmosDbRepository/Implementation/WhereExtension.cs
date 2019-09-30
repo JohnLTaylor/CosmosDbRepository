@@ -13,7 +13,7 @@ namespace CosmosDbRepository.Implementation
                 throw new ArgumentNullException(nameof(source));
             }
 
-            return (predicate != default)
+            return (predicate != default(Expression<Func<TSource, bool>>))
                 ? source.Where(predicate)
                 : source;
         }

@@ -40,7 +40,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _addExceptionConditions.Select(func => func(entity)).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<T>(failure);
             }
@@ -67,7 +67,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _countExceptionConditions.Select(func => func()).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<int>(failure);
             }
@@ -79,7 +79,7 @@ namespace CosmosDbRepository.Substitute
                 entities = _entities.Select(i => i.Entity).ToArray();
             }
 
-            if (predicate != default)
+            if (predicate != default(Expression<Func<T, bool>>))
                 entities = entities.Where(predicate.Compile());
 
             if (clauses != default)
@@ -97,7 +97,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _deleteExceptionConditions.Select(func => func(itemId)).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<bool>(failure);
             }
@@ -122,7 +122,7 @@ namespace CosmosDbRepository.Substitute
             var failure = _deleteExceptionConditions.Select(func => func(entity)).FirstOrDefault() ??
                           _deleteExceptionConditions.Select(func => func(item.Id)).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<bool>(failure);
             }
@@ -154,7 +154,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _findExceptionConditions.Select(func => func()).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<CosmosDbRepositoryPagedResults<T>>(failure);
             }
@@ -173,7 +173,7 @@ namespace CosmosDbRepository.Substitute
                 entities = JsonConvert.DeserializeObject<T[]>(continuationToken);
             }
 
-            if (predicate != default)
+            if (predicate != default(Expression<Func<T, bool>>))
                 entities = entities.Where(predicate.Compile());
 
             if (clauses != default)
@@ -197,7 +197,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _findFirstOrDefaultExceptionConditions.Select(func => func()).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<T>(failure);
             }
@@ -209,7 +209,7 @@ namespace CosmosDbRepository.Substitute
                 entities = _entities.Select(i => i.Entity).ToArray();
             }
 
-            if (predicate != default)
+            if (predicate != default(Expression<Func<T, bool>>))
                 entities = entities.Where(predicate.Compile());
 
             if (clauses != default)
@@ -222,7 +222,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _getExceptionConditions.Select(func => func(entity)).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<T>(failure);
             }
@@ -235,7 +235,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _getExceptionConditions.Select(func => func(itemId)).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<T>(failure);
             }
@@ -247,7 +247,7 @@ namespace CosmosDbRepository.Substitute
                 item = _entities.FirstOrDefault(cfg => cfg.Id == itemId);
             }
 
-            return Task.FromResult(item == default ? default : DeepClone(item.Entity));
+            return Task.FromResult(item == default(EntityStorage) ? default : DeepClone(item.Entity));
         }
 
         public Task Init()
@@ -259,7 +259,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _replaceExceptionConditions.Select(func => func(entity)).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<T>(failure);
             }
@@ -298,7 +298,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _selectExceptionConditions.Select(func => func()).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
             }
@@ -346,7 +346,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _selectExceptionConditions.Select(func => func()).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
             }
@@ -394,7 +394,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _selectManyExceptionConditions.Select(func => func()).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
             }
@@ -439,7 +439,7 @@ namespace CosmosDbRepository.Substitute
         {
             var failure = _upsertExceptionConditions.Select(func => func(entity)).FirstOrDefault();
 
-            if (failure != default)
+            if (failure != default(DocumentClientException))
             {
                 return Task.FromException<T>(failure);
             }
@@ -804,7 +804,7 @@ namespace CosmosDbRepository.Substitute
 
         private static T DeepClone(T src)
         {
-            return (src == default)
+            return (Equals(src, default(T)))
                 ? default
                 : JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(src));
         }
@@ -1011,7 +1011,9 @@ namespace CosmosDbRepository.Substitute
 
         private bool CheckETag(T item, EntityStorage entity, out DocumentClientException exception)
         {
-            if (new EntityStorage(item).ETag != entity.ETag)
+            var etag = new EntityStorage(item).ETag;
+
+            if (!string.IsNullOrEmpty(etag) && etag != entity.ETag)
             {
                 exception = CreateDbException(HttpStatusCode.PreconditionFailed, "ETag mismatch");
                 return true;
