@@ -448,7 +448,17 @@ namespace CosmosDbRepository.Implementation
 
                 foreach(var sp in _storedProcedures.Where(sp => sps.FirstOrDefault(p => p.Id == sp.Id)?.Body != sp.Body))
                 {
-                    await _client.UpsertStoredProcedureAsync(resourceResponse.Resource.AltLink, sp);
+                    var updatedSp  = sps.FirstOrDefault(p => p.Id == sp.Id);
+
+                    if (updatedSp == null)
+                    {
+                        await _client.CreateStoredProcedureAsync(resourceResponse.Resource.AltLink, sp);
+                    }
+                    else
+                    {
+                        updatedSp.Body = sp.Body;
+                        await _client.ReplaceStoredProcedureAsync(updatedSp);
+                    }                 
                 }
             }
 
