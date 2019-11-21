@@ -14,7 +14,7 @@ namespace CosmosDbRepository.Implementation
         private List<StoredProcedure> _storedProcedure = new List<StoredProcedure>();
         private IndexingMode _indexingMode = IndexingMode.Consistent;
         private int? _throughput;
-
+        private Collection<string> _partitionKeyPaths = new Collection<string>();
         public string Id { get; private set; }
 
         public ICosmosDbRepositoryBuilder WithId(string id)
@@ -43,6 +43,18 @@ namespace CosmosDbRepository.Implementation
                     ? new Collection<Index>(indexes)
                     : null
             });
+
+            return this;
+        }
+
+        public ICosmosDbRepositoryBuilder IncludePartitionKeyPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Invalid Include Path", nameof(path));
+            };
+
+            _partitionKeyPaths.Add(path);
 
             return this;
         }
@@ -82,6 +94,11 @@ namespace CosmosDbRepository.Implementation
                 IndexingMode = _indexingMode
             };
 
+            var partitionkeyDefinition = new PartitionKeyDefinition
+            {
+                Paths = _partitionKeyPaths
+            };
+
             if (_includePaths.Any())
             {
                 indexingPolicy.IncludedPaths = new Collection<IncludedPath>(_includePaths);
@@ -92,7 +109,7 @@ namespace CosmosDbRepository.Implementation
                 indexingPolicy.ExcludedPaths = new Collection<ExcludedPath>(_excludePaths);
             }
 
-            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, _throughput ?? defaultThroughput, _storedProcedure);
+            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, partitionkeyDefinition, _throughput ?? defaultThroughput, _storedProcedure);
         }
     }
 }

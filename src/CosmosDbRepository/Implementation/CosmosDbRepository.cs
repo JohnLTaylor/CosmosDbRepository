@@ -20,6 +20,7 @@ namespace CosmosDbRepository.Implementation
         private readonly IDocumentClient _client;
         private readonly ICosmosDb _documentDb;
         private readonly IndexingPolicy _indexingPolicy;
+        private readonly PartitionKeyDefinition _partitionkeyDefinition;
         private readonly FeedOptions _defaultFeedOptions;
         private readonly int? _throughput;
         private readonly List<StoredProcedure> _storedProcedures;
@@ -34,6 +35,7 @@ namespace CosmosDbRepository.Implementation
                                   ICosmosDb documentDb,
                                   string id,
                                   IndexingPolicy indexingPolicy,
+                                  PartitionKeyDefinition partitionkeyDefinition,
                                   int? throughput,
                                   IEnumerable<StoredProcedure> storedProcedures)
         {
@@ -41,13 +43,14 @@ namespace CosmosDbRepository.Implementation
             _client = client;
             Id = id;
             _indexingPolicy = indexingPolicy;
+            _partitionkeyDefinition = partitionkeyDefinition;
             _throughput = throughput;
             _storedProcedures = new List<StoredProcedure>(storedProcedures);
 
             _defaultFeedOptions = new FeedOptions
             {
                 EnableScanInQuery = true,
-                EnableCrossPartitionQuery = true
+                EnableCrossPartitionQuery = !partitionkeyDefinition.Paths.Any()
             };
 
             _collection = new AsyncLazy<DocumentCollection>(() => GetOrCreateCollectionAsync());
@@ -439,7 +442,7 @@ namespace CosmosDbRepository.Implementation
         {
             var resourceResponse = await _client.CreateDocumentCollectionIfNotExistsAsync(
                 await _documentDb.SelfLinkAsync,
-                new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy },
+                new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy, PartitionKey = _partitionkeyDefinition },
                 new RequestOptions { OfferThroughput = _throughput });
 
             if (_storedProcedures.Any())
