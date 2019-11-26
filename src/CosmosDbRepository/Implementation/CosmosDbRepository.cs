@@ -20,8 +20,10 @@ namespace CosmosDbRepository.Implementation
         private readonly IDocumentClient _client;
         private readonly ICosmosDb _documentDb;
         private readonly IndexingPolicy _indexingPolicy;
+        private readonly Func<T, object> _partionkeySelector;
         private readonly PartitionKeyDefinition _partitionkeyDefinition;
         private readonly FeedOptions _defaultFeedOptions;
+        private readonly bool _hasPartionKey;
         private readonly int? _throughput;
         private readonly List<StoredProcedure> _storedProcedures;
         private AsyncLazy<DocumentCollection> _collection;
@@ -35,6 +37,7 @@ namespace CosmosDbRepository.Implementation
                                   ICosmosDb documentDb,
                                   string id,
                                   IndexingPolicy indexingPolicy,
+                                  Func<T, object> partionkeySelector,
                                   PartitionKeyDefinition partitionkeyDefinition,
                                   int? throughput,
                                   IEnumerable<StoredProcedure> storedProcedures)
@@ -43,14 +46,16 @@ namespace CosmosDbRepository.Implementation
             _client = client;
             Id = id;
             _indexingPolicy = indexingPolicy;
+            _partionkeySelector = partionkeySelector;
             _partitionkeyDefinition = partitionkeyDefinition;
             _throughput = throughput;
             _storedProcedures = new List<StoredProcedure>(storedProcedures);
+            _hasPartionKey = partitionkeyDefinition?.Paths?.Any() == true;
 
             _defaultFeedOptions = new FeedOptions
             {
                 EnableScanInQuery = true,
-                EnableCrossPartitionQuery = !partitionkeyDefinition.Paths.Any()
+                EnableCrossPartitionQuery = !_hasPartionKey
             };
 
             _collection = new AsyncLazy<DocumentCollection>(() => GetOrCreateCollectionAsync());
@@ -58,17 +63,21 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<T> AddAsync(T entity, RequestOptions requestOptions = null)
         {
+            requestOptions = GetPartionKey(entity, requestOptions);
+
             var addedDoc = await _client.CreateDocumentAsync((await _collection).SelfLink, entity, requestOptions);
             return JsonConvert.DeserializeObject<T>(addedDoc.Resource.ToString());
         }
 
         public async Task<T> ReplaceAsync(T entity, RequestOptions requestOptions = null)
         {
+            requestOptions = GetPartionKey(entity, requestOptions);
+
             (string id, string eTag) = GetIdAndETag(entity);
 
             if (eTag != null)
             {
-                requestOptions = requestOptions ?? new RequestOptions();
+                requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
                 requestOptions.AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = eTag };
             }
 
@@ -83,11 +92,13 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<T> UpsertAsync(T entity, RequestOptions requestOptions = null)
         {
+            requestOptions = GetPartionKey(entity, requestOptions);
+
             (string id, string eTag) = GetIdAndETag(entity);
 
             if (eTag != null)
             {
-                requestOptions = requestOptions ?? new RequestOptions();
+                requestOptions = requestOptions?.ShallowCopy() ?? new RequestOptions();
                 requestOptions.AccessCondition = new AccessCondition { Type = AccessConditionType.IfMatch, Condition = eTag };
             }
 
@@ -98,6 +109,8 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
+            CheckPartionKey(feedOptions);
+
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .ConditionalWhere(predicate)
@@ -121,6 +134,8 @@ namespace CosmosDbRepository.Implementation
 
             feedOptions.RequestContinuation = continuationToken;
             feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            CheckPartionKey(feedOptions);
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
@@ -147,6 +162,8 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<IList<U>> SelectAsync<U>(Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
+            CheckPartionKey(feedOptions);
+
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .Select(selector)
@@ -170,6 +187,8 @@ namespace CosmosDbRepository.Implementation
 
             feedOptions.RequestContinuation = continuationToken;
             feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            CheckPartionKey(feedOptions);
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
@@ -196,6 +215,8 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<IList<U>> SelectAsync<U, V>(Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
+            CheckPartionKey(feedOptions);
+
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .ApplyClauses(whereClauses)
@@ -220,6 +241,8 @@ namespace CosmosDbRepository.Implementation
 
             feedOptions.RequestContinuation = continuationToken;
             feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            CheckPartionKey(feedOptions);
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
@@ -247,7 +270,9 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<IList<TResult>> SelectManyAsync<TResult>(Expression<Func<T, IEnumerable<TResult>>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<TResult>, IQueryable<TResult>> selectClauses = null, FeedOptions feedOptions = null)
         {
-            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
+            feedOptions = feedOptions ?? _defaultFeedOptions;
+
+            CheckPartionKey(feedOptions);
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
@@ -273,6 +298,8 @@ namespace CosmosDbRepository.Implementation
             feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
             feedOptions.RequestContinuation = continuationToken;
             feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            CheckPartionKey(feedOptions);
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
@@ -302,6 +329,8 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<int> CountAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
+            CheckPartionKey(feedOptions);
+
             return await _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .ConditionalWhere(predicate)
                 .ConditionalApplyClauses(clauses)
@@ -312,6 +341,8 @@ namespace CosmosDbRepository.Implementation
         {
             feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
             feedOptions.MaxItemCount = 1;
+
+            CheckPartionKey(feedOptions);
 
             var query =
                 _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions)
@@ -343,6 +374,8 @@ namespace CosmosDbRepository.Implementation
             var documentLink = $"{(await _collection).AltLink}/docs/{Uri.EscapeUriString(id)}";
             T result;
 
+            requestOptions = GetPartionKey(entity, requestOptions);
+
             try
             {
                 var response = await _client.ReadDocumentAsync<T>(documentLink, requestOptions);
@@ -365,6 +398,8 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<T> GetAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
+            CheckPartionKey(requestOptions);
+
             var documentLink = $"{(await _collection).AltLink}/docs/{Uri.EscapeUriString(itemId.Id)}";
             T result;
 
@@ -387,6 +422,7 @@ namespace CosmosDbRepository.Implementation
         public async Task<bool> DeleteDocumentAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
             var documentLink = $"{(await _collection).AltLink}/docs/{Uri.EscapeUriString(itemId.Id)}";
+            CheckPartionKey(requestOptions);
 
             var response = await _client.DeleteDocumentAsync(documentLink, requestOptions);
             return response.StatusCode == HttpStatusCode.NoContent;
@@ -404,6 +440,8 @@ namespace CosmosDbRepository.Implementation
             }
 
             var documentLink = $"{(await _collection).AltLink}/docs/{Uri.EscapeUriString(id)}";
+
+            requestOptions = GetPartionKey(entity, requestOptions);
 
             var response = await _client.DeleteDocumentAsync(documentLink, requestOptions);
             return response.StatusCode == HttpStatusCode.NoContent;
@@ -440,9 +478,16 @@ namespace CosmosDbRepository.Implementation
 
         private async Task<DocumentCollection> GetOrCreateCollectionAsync()
         {
+            var documentCollection = new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy };
+
+            if (_partitionkeyDefinition != null)
+            {
+                documentCollection.PartitionKey = _partitionkeyDefinition;
+            }
+
             var resourceResponse = await _client.CreateDocumentCollectionIfNotExistsAsync(
                 await _documentDb.SelfLinkAsync,
-                new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy, PartitionKey = _partitionkeyDefinition },
+                documentCollection,
                 new RequestOptions { OfferThroughput = _throughput });
 
             if (_storedProcedures.Any())
@@ -515,5 +560,38 @@ namespace CosmosDbRepository.Implementation
         {
             return (await _collection).AltLink;
         }
+
+        private RequestOptions GetPartionKey(T entity, RequestOptions requestOptions)
+        {
+            if (_hasPartionKey && requestOptions?.PartitionKey == null)
+            {
+                if (_partionkeySelector == null)
+                {
+                    throw new InvalidOperationException("PartitionkeySelector must be specified");
+                }
+
+                requestOptions = requestOptions.ShallowCopy() ?? new RequestOptions();
+                requestOptions.PartitionKey = new PartitionKey(_partionkeySelector(entity));
+            }
+
+            return requestOptions;
+        }
+
+        private void CheckPartionKey(RequestOptions requestOptions)
+        {
+            if (_hasPartionKey && requestOptions?.PartitionKey == null)
+            {
+                throw new InvalidOperationException("PartitionKey must be specified");
+            }
+        }
+
+        private void CheckPartionKey(FeedOptions feedOptions)
+        {
+            if (_hasPartionKey && feedOptions?.EnableCrossPartitionQuery != true && feedOptions?.PartitionKey == null)
+            {
+                throw new InvalidOperationException("PartitionKey must be specified");
+            }
+        }
+
     }
 }

@@ -98,26 +98,26 @@ namespace CosmosDbRepositoryTest
         }
 
         [TestMethod]
-        public void AddCollection_IncludePartitionKeyPath_Success()
+        public void AddCollection_IncludePartitionkeyPath_Success()
         {
             new CosmosDbBuilder()
-                .AddCollection<TestData<Guid>>(null, bld => bld.IncludeIndexPath("/id", Index.Range(DataType.String)).IncludePartitionKeyPath("/id"));
+                .AddCollection<TestData<Guid>>(null, bld => bld.IncludeIndexPath("/id", Index.Range(DataType.String)).IncludePartitionkeyPath("/id"));
         }
 
         [TestMethod]
-        public void AddCollection_IncludePartitionKeyPath_NullIndexPath_Expect_ArgumentException()
+        public void AddCollection_IncludePartitionkeyPath_NullIndexPath_Expect_ArgumentException()
         {
             Func<ICosmosDbBuilder> action = () => new CosmosDbBuilder()
-                .AddCollection<TestData<Guid>>(null, bld => bld.IncludePartitionKeyPath(null));
+                .AddCollection<TestData<Guid>>(null, bld => bld.IncludePartitionkeyPath(null));
             action.Should().ThrowExactly<ArgumentException>();
         }
 
 
         [TestMethod]
-        public void AddCollection_IncludePartitionKeyPath_EmptyIndexPath_Expect_ArgumentException()
+        public void AddCollection_IncludePartitionkeyPath_EmptyIndexPath_Expect_ArgumentException()
         {
             Func<ICosmosDbBuilder> action = () => new CosmosDbBuilder()
-                .AddCollection<TestData<Guid>>(null, bld => bld.IncludePartitionKeyPath(string.Empty));
+                .AddCollection<TestData<Guid>>(null, bld => bld.IncludePartitionkeyPath(string.Empty));
             action.Should().ThrowExactly<ArgumentException>();
         }
 

@@ -7,7 +7,7 @@ namespace CosmosDbRepository
     {
         ICosmosDbBuilder WithId(string name);
         ICosmosDbBuilder WithDefaultThroughput(int? defaultThroughput);
-        ICosmosDbBuilder AddCollection<T>(string id = null, Action<ICosmosDbRepositoryBuilder> func = null);
+        ICosmosDbBuilder AddCollection<T>(string id = null, Action<ICosmosDbRepositoryBuilder<T>> func = null);
         ICosmosDb Build(IDocumentClient client);
     }
 }
