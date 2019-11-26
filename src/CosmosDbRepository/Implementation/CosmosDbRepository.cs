@@ -28,6 +28,10 @@ namespace CosmosDbRepository.Implementation
         private readonly List<StoredProcedure> _storedProcedures;
         private AsyncLazy<DocumentCollection> _collection;
         private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
+        private static readonly Type[] IndirectlySupportedIndexTypes =
+        {
+            typeof(Guid)
+        };
 
         public string Id { get; }
         public Type Type => typeof(T);
@@ -46,6 +50,14 @@ namespace CosmosDbRepository.Implementation
             _client = client;
             Id = id;
             _indexingPolicy = indexingPolicy;
+
+            var resultType = partionkeySelector?.GetMethodInfo()?.ReturnType;
+
+            if (IndirectlySupportedIndexTypes.Contains(resultType))
+            {
+                partionkeySelector = (T t) => partionkeySelector(t).ToString();
+            }
+
             _partionkeySelector = partionkeySelector;
             _partitionkeyDefinition = partitionkeyDefinition;
             _throughput = throughput;
