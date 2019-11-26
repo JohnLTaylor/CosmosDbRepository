@@ -32,7 +32,7 @@ namespace CosmosDbRepository
             return this;
         }
 
-        public ICosmosDbBuilder AddCollection<T>(string id = null, Action<ICosmosDbRepositoryBuilder> func = null)
+        public ICosmosDbBuilder AddCollection<T>(string id = null, Action<ICosmosDbRepositoryBuilder<T>> func = null)
         {
             id = GetCollectionName<T>(id);
 

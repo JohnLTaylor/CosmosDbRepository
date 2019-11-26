@@ -11,7 +11,7 @@ namespace CosmosDbRepository.Implementation
         private static readonly ConcurrentDictionary<Type, Func<object, object>> _copiers = new ConcurrentDictionary<Type, Func<object, object>>();
 
         public static T ShallowCopy<T>(this T source)
-             where T : new()
+             where T : class, new()
         {
             Func<object, object> Factory(Type type)
             {
@@ -28,7 +28,9 @@ namespace CosmosDbRepository.Implementation
                 return Expression.Lambda<Func<object, object>>(body, o).Compile();
             }
 
-            return (T)_copiers.GetOrAdd(source.GetType(), Factory)(source);
+            return source != default(T)
+                ? (T)_copiers.GetOrAdd(source.GetType(), Factory)(source)
+                : default(T);
         }
     }
 

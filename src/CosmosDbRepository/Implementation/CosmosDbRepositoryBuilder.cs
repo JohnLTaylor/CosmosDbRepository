@@ -7,29 +7,30 @@ using System.Linq;
 namespace CosmosDbRepository.Implementation
 {
     internal class CosmosDbRepositoryBuilder<T>
-        : ICosmosDbRepositoryBuilder
+        : ICosmosDbRepositoryBuilder<T>
     {
         private List<IncludedPath> _includePaths = new List<IncludedPath>();
         private List<ExcludedPath> _excludePaths = new List<ExcludedPath>();
         private List<StoredProcedure> _storedProcedure = new List<StoredProcedure>();
         private IndexingMode _indexingMode = IndexingMode.Consistent;
         private int? _throughput;
-
+        private Func<T, object> _partitionkeySelector;
+        private List<string> _partitionKeyPaths = new List<string>();
         public string Id { get; private set; }
 
-        public ICosmosDbRepositoryBuilder WithId(string id)
+        public ICosmosDbRepositoryBuilder<T> WithId(string id)
         {
             Id = id;
             return this;
         }
 
-        public ICosmosDbRepositoryBuilder WithThroughput(int? throughput)
+        public ICosmosDbRepositoryBuilder<T> WithThroughput(int? throughput)
         {
             _throughput = throughput;
             return this;
         }
 
-        public ICosmosDbRepositoryBuilder IncludeIndexPath(string path, params Index[] indexes)
+        public ICosmosDbRepositoryBuilder<T> IncludeIndexPath(string path, params Index[] indexes)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
@@ -47,7 +48,25 @@ namespace CosmosDbRepository.Implementation
             return this;
         }
 
-        public ICosmosDbRepositoryBuilder ExcludeIndexPath(params string[] paths)
+        public ICosmosDbRepositoryBuilder<T> IncludePartitionkeySelector(Func<T, object> partitionkeySelector)
+        {
+            _partitionkeySelector = partitionkeySelector;
+            return this;
+        }
+
+        public ICosmosDbRepositoryBuilder<T> IncludePartitionkeyPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Invalid Include Path", nameof(path));
+            };
+
+            _partitionKeyPaths.Add(path);
+
+            return this;
+        }
+
+        public ICosmosDbRepositoryBuilder<T> ExcludeIndexPath(params string[] paths)
         {
             if (paths == null)
             {
@@ -67,7 +86,7 @@ namespace CosmosDbRepository.Implementation
             return this;
         }
 
-        public ICosmosDbRepositoryBuilder StoredProcedure(string id, string body)
+        public ICosmosDbRepositoryBuilder<T> StoredProcedure(string id, string body)
         {
             _storedProcedure.Add(new StoredProcedure { Id = id, Body = body });
             return this;
@@ -82,6 +101,17 @@ namespace CosmosDbRepository.Implementation
                 IndexingMode = _indexingMode
             };
 
+
+            PartitionKeyDefinition partitionkeyDefinition = null;
+
+            if (_partitionKeyPaths.Any())
+            {
+                partitionkeyDefinition = new PartitionKeyDefinition
+                {
+                    Paths = new Collection<string>(_partitionKeyPaths)
+                };
+            }           
+
             if (_includePaths.Any())
             {
                 indexingPolicy.IncludedPaths = new Collection<IncludedPath>(_includePaths);
@@ -92,7 +122,7 @@ namespace CosmosDbRepository.Implementation
                 indexingPolicy.ExcludedPaths = new Collection<ExcludedPath>(_excludePaths);
             }
 
-            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, _throughput ?? defaultThroughput, _storedProcedure);
+            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, _partitionkeySelector, partitionkeyDefinition, _throughput ?? defaultThroughput, _storedProcedure);
         }
     }
 }

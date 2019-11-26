@@ -98,6 +98,30 @@ namespace CosmosDbRepositoryTest
         }
 
         [TestMethod]
+        public void AddCollection_IncludePartitionkeyPath_Success()
+        {
+            new CosmosDbBuilder()
+                .AddCollection<TestData<Guid>>(null, bld => bld.IncludeIndexPath("/id", Index.Range(DataType.String)).IncludePartitionkeyPath("/id"));
+        }
+
+        [TestMethod]
+        public void AddCollection_IncludePartitionkeyPath_NullIndexPath_Expect_ArgumentException()
+        {
+            Func<ICosmosDbBuilder> action = () => new CosmosDbBuilder()
+                .AddCollection<TestData<Guid>>(null, bld => bld.IncludePartitionkeyPath(null));
+            action.Should().ThrowExactly<ArgumentException>();
+        }
+
+
+        [TestMethod]
+        public void AddCollection_IncludePartitionkeyPath_EmptyIndexPath_Expect_ArgumentException()
+        {
+            Func<ICosmosDbBuilder> action = () => new CosmosDbBuilder()
+                .AddCollection<TestData<Guid>>(null, bld => bld.IncludePartitionkeyPath(string.Empty));
+            action.Should().ThrowExactly<ArgumentException>();
+        }
+
+        [TestMethod]
         public void AddCollection_ExcludeIndexPath_NullIndexPath_Expect_ArgumentNullException()
         {
             Func<ICosmosDbBuilder> action = () => new CosmosDbBuilder()
