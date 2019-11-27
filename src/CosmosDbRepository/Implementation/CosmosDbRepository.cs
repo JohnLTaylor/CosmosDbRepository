@@ -51,11 +51,17 @@ namespace CosmosDbRepository.Implementation
             Id = id;
             _indexingPolicy = indexingPolicy;
 
-            var resultType = partionkeySelector?.GetMethodInfo()?.ReturnType;
 
-            if (IndirectlySupportedIndexTypes.Contains(resultType))
+            if (partionkeySelector != null)
             {
-                partionkeySelector = (T t) => partionkeySelector(t).ToString();
+                partionkeySelector = (T t) =>
+                {
+                    object result = partionkeySelector(t);
+
+                    return IndirectlySupportedIndexTypes.Contains(result?.GetType()) == true
+                        ? result.ToString()
+                        : result;
+                };
             }
 
             _partionkeySelector = partionkeySelector;
