@@ -54,9 +54,11 @@ namespace CosmosDbRepository.Implementation
 
             if (partionkeySelector != null)
             {
+                var pks = partionkeySelector;
+
                 partionkeySelector = (T t) =>
                 {
-                    object result = partionkeySelector(t);
+                    object result = pks(t);
 
                     return IndirectlySupportedIndexTypes.Contains(result?.GetType()) == true
                         ? result.ToString()
