@@ -113,60 +113,60 @@ namespace CosmosDbRepository
             return repo.DeleteDocumentAsync(itemId, requestOptions);
         }
 
-        public static Task<IList<T>> CrossPartitionFindAsync<T, U>(this ICosmosDbRepository<T> repo, U partitionKey, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
+        public static Task<IList<T>> CrossPartitionFindAsync<T>(this ICosmosDbRepository<T> repo, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.FindAsync(predicate, clauses, feedOptions);
         }
 
-        public static Task<CosmosDbRepositoryPagedResults<T>> CrossPartitionFindAsync<T, U>(this ICosmosDbRepository<T> repo, U partitionKey, int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
+        public static Task<CosmosDbRepositoryPagedResults<T>> CrossPartitionFindAsync<T>(this ICosmosDbRepository<T> repo, int pageSize, string continuationToken, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.FindAsync(pageSize, continuationToken, predicate, clauses, feedOptions);
         }
 
-        public static Task<IList<U>> CrossPartitionSelectAsync<T, U, V>(this ICosmosDbRepository<T> repo, V partitionKey, Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public static Task<IList<U>> CrossPartitionSelectAsync<T, U>(this ICosmosDbRepository<T> repo, Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.SelectAsync(selector, selectClauses, feedOptions);
         }
 
-        public static Task<CosmosDbRepositoryPagedResults<U>> CrossPartitionSelectAsync<T, U, V>(this ICosmosDbRepository<T> repo, V partitionKey, int pageSize, string continuationToken, Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public static Task<CosmosDbRepositoryPagedResults<U>> CrossPartitionSelectAsync<T, U>(this ICosmosDbRepository<T> repo, int pageSize, string continuationToken, Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.SelectAsync(pageSize, continuationToken, selector, selectClauses, feedOptions);
         }
 
-        public static Task<IList<U>> CrossPartitionSelectAsync<T, U, V, W>(this ICosmosDbRepository<T> repo, W partitionKey, Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public static Task<IList<U>> CrossPartitionSelectAsync<T, U, V>(this ICosmosDbRepository<T> repo, Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.SelectAsync(selector, whereClauses, selectClauses, feedOptions);
         }
 
-        public static Task<CosmosDbRepositoryPagedResults<U>> CrossPartitionSelectAsync<T, U, V, W>(this ICosmosDbRepository<T> repo, W partitionKey, int pageSize, string continuationToken, Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public static Task<CosmosDbRepositoryPagedResults<U>> CrossPartitionSelectAsync<T, U, V>(this ICosmosDbRepository<T> repo, int pageSize, string continuationToken, Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.SelectAsync(pageSize, continuationToken, selector, whereClauses, selectClauses, feedOptions);
         }
-        public static Task<IList<U>> CrossPartitionSelectManyAsync<T, U, V>(this ICosmosDbRepository<T> repo, V partitionKey, Expression<Func<T, IEnumerable<U>>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public static Task<IList<U>> CrossPartitionSelectManyAsync<T, U>(this ICosmosDbRepository<T> repo, Expression<Func<T, IEnumerable<U>>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.SelectManyAsync(selector, whereClauses, selectClauses, feedOptions);
         }
 
-        public static Task<CosmosDbRepositoryPagedResults<U>> CrossPartitionSelectManyAsync<T, U, V>(this ICosmosDbRepository<T> repo, V partitionKey, int pageSize, string continuationToken, Expression<Func<T, IEnumerable<U>>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        public static Task<CosmosDbRepositoryPagedResults<U>> CrossPartitionSelectManyAsync<T, U>(this ICosmosDbRepository<T> repo, int pageSize, string continuationToken, Expression<Func<T, IEnumerable<U>>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.SelectManyAsync(pageSize, continuationToken, selector, whereClauses, selectClauses, feedOptions);
         }
 
-        public static Task<int> CrossPartitionCountAsync<T, U>(this ICosmosDbRepository<T> repo, U partitionKey, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
+        public static Task<int> CrossPartitionCountAsync<T>(this ICosmosDbRepository<T> repo, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.CountAsync(predicate, clauses, feedOptions);
         }
 
-        public static Task<T> CrossPartitionFindFirstOrDefaultAsync<T, U>(this ICosmosDbRepository<T> repo, U partitionKey, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
+        public static Task<T> CrossPartitionFindFirstOrDefaultAsync<T>(this ICosmosDbRepository<T> repo, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
             return repo.FindFirstOrDefaultAsync(predicate, clauses, feedOptions);
