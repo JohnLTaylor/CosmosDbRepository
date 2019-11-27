@@ -14,8 +14,17 @@ using System.Threading.Tasks;
 
 namespace CosmosDbRepository.Implementation
 {
+    internal class CosmosDbRepository
+    {
+        internal static readonly Type[] IndirectlySupportedIndexTypes =
+        {
+            typeof(Guid)
+        };
+    }
+
     internal class CosmosDbRepository<T>
-        : ICosmosDbRepository<T>
+        : CosmosDbRepository
+        , ICosmosDbRepository<T>
     {
         private readonly IDocumentClient _client;
         private readonly ICosmosDb _documentDb;
@@ -28,10 +37,6 @@ namespace CosmosDbRepository.Implementation
         private readonly List<StoredProcedure> _storedProcedures;
         private AsyncLazy<DocumentCollection> _collection;
         private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
-        private static readonly Type[] IndirectlySupportedIndexTypes =
-        {
-            typeof(Guid)
-        };
 
         public string Id { get; }
         public Type Type => typeof(T);

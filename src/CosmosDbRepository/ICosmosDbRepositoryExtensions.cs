@@ -116,14 +116,24 @@ namespace CosmosDbRepository
         private static RequestOptions SetPartitionKey<U>(U partitionKey, RequestOptions requestOptions)
         {
             requestOptions = requestOptions.ShallowCopy() ?? new RequestOptions();
-            requestOptions.PartitionKey = new PartitionKey(partitionKey);
+
+            object pk = CosmosDbRepository.Implementation.CosmosDbRepository.IndirectlySupportedIndexTypes.Contains(partitionKey.GetType())
+                ? (object)partitionKey.ToString()
+                : partitionKey;
+
+            requestOptions.PartitionKey = new PartitionKey(pk);
             return requestOptions;
         }
 
         private static FeedOptions SetPartitionKey<U>(U partitionKey, FeedOptions feedOptions)
         {
             feedOptions = feedOptions.ShallowCopy() ?? new FeedOptions();
-            feedOptions.PartitionKey = new PartitionKey(partitionKey);
+
+            object pk = CosmosDbRepository.Implementation.CosmosDbRepository.IndirectlySupportedIndexTypes.Contains(partitionKey.GetType())
+                ? (object)partitionKey.ToString()
+                : partitionKey;
+
+            feedOptions.PartitionKey = new PartitionKey(pk);
             return feedOptions;
         }
     }
