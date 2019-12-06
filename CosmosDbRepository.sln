@@ -21,12 +21,15 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDbRepository.Types", "src\CosmosDbRepository.Types\CosmosDbRepository.Types.csproj", "{FADE7E94-E056-41D2-960D-88138B758100}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7AAE46A6-529D-44F3-8540-B42976F4521B}"
+	ProjectSection(SolutionItems) = preProject
+		test\CosmosDbRepositorySubstituteTest\ITestingContext.cs = test\CosmosDbRepositorySubstituteTest\ITestingContext.cs
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDbRepositoryTest", "test\CosmosDbRepositoryTest\CosmosDbRepositoryTest.csproj", "{87330539-1E91-459D-802A-5D6B705DADFD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDbRepository.Substitute", "src\CosmosDbRepository.Substitute\CosmosDbRepository.Substitute.csproj", "{4D64341C-4552-4973-AD14-FAADCE10781E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmosDbRepositorySubstituteTest", "test\CosmosDbRepositorySubstituteTest\CosmosDbRepositorySubstituteTest.csproj", "{1648C5AF-C560-4BE3-AC39-55A4FBC79E8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CosmosDbRepositorySubstituteTest", "test\CosmosDbRepositorySubstituteTest\CosmosDbRepositorySubstituteTest.csproj", "{1648C5AF-C560-4BE3-AC39-55A4FBC79E8C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
