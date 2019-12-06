@@ -13,6 +13,20 @@ namespace CosmosDbRepositorySubstituteTest
     public class SubstituteTest
         : CosmosDbRepositoryTests<TestData<Guid>>
     {
+        private IServiceProvider _services;
+
+        [TestInitialize]
+        public void TestInitialize()
+        {
+            _services = TestFramework.Initialize();
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            TestFramework.Cleanup(_services);
+        }
+
         [TestMethod]
         public async Task AddWithId()
         {
@@ -24,7 +38,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, TestData<Guid> Result) repoResult;
 
-            using (var context = CreateContext())
+            using (var context = CreateContext(_services))
             {
                 repoResult = await context.Repo.AddAsync(data).ContinueWith(CaptureResult);
             }
@@ -53,7 +67,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, TestData<Guid> Result) repoResult;
 
-            using (var context = CreateContext())
+            using (var context = CreateContext(_services))
             {
                 repoResult = await context.Repo.AddAsync(data).ContinueWith(CaptureResult);
             }
@@ -83,7 +97,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, bool Result) repoResult;
 
-            using (var context = CreateContext())
+            using (var context = CreateContext(_services))
             {
                 var tmp = await context.Repo.AddAsync(data);
                 repoResult = await context.Repo.DeleteDocumentAsync(tmp).ContinueWith(CaptureResult);
@@ -111,7 +125,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, bool Result) repoResult;
 
-            using (var context = CreateContext())
+            using (var context = CreateContext(_services))
             {
                 var tmp = await context.Repo.AddAsync(data);
                 await context.Repo.ReplaceAsync(tmp);
@@ -198,7 +212,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, TestData<Guid> Result) repoResult;
 
-            using (var context = CreateContext())
+            using (var context = CreateContext(_services))
             {
                 var tmp = await context.Repo.AddAsync(data);
                 await context.Repo.UpsertAsync(tmp);
@@ -229,7 +243,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, TestData<Guid> Result) repoResult;
 
-            using (var context = CreateContext())
+            using (var context = CreateContext(_services))
             {
                 var tmp = await context.Repo.AddAsync(data);
                 await context.Repo.UpsertAsync(tmp);

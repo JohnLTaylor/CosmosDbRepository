@@ -16,6 +16,20 @@ namespace CosmosDbRepositorySubstituteTest
         private const string IgnoreExceptionFields = "Item1.InnerException.TargetSite|Item1.InnerException.StackTrace|Item1.InnerException.Source|Item1.InnerException.IPForWatsonBuckets";
         private const string IgnoreExceptionMessageFields = IgnoreExceptionFields + "|Item1.Message|Item1.InnerException.Message|Item1.InnerException._message|Item1.InnerException.HResult|Item1.InnerException._HResult";
 
+        private IServiceProvider _services;
+
+        [TestInitialize]
+        public void TestInitialize()
+        {
+            _services = TestFramework.Initialize();
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            TestFramework.Cleanup(_services);
+        }
+
         [TestMethod]
         public async Task AddTheSameIdDIfferentPartitions()
         {
@@ -27,7 +41,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, TestData<Guid> Result) repoResult;
 
-            using (var context = CreateContext(repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
+            using (var context = CreateContext(_services, repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
             {
                 await context.Repo.AddAsync(data);
                 var tmp = new TestData<Guid>
@@ -80,7 +94,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, TestData<Guid> Result) repoResult;
 
-            using (var context = CreateContext(repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
+            using (var context = CreateContext(_services, repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
             {
                 await context.Repo.AddAsync(data);
 
@@ -111,7 +125,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, TestData<Guid> Result) repoResult;
 
-            using (var context = CreateContext(repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
+            using (var context = CreateContext(_services, repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
             {
                 await context.Repo.AddAsync(data);
                 repoResult = await context.Repo.GetAsync("Two", data.Id).ContinueWith(CaptureResult);
@@ -139,7 +153,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, TestData<Guid> Result) repoResult;
 
-            using (var context = CreateContext(repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
+            using (var context = CreateContext(_services, repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
             {
                 var tmp = await context.Repo.AddAsync(data);
                 repoResult = await context.Repo.ReplaceAsync(tmp).ContinueWith(CaptureResult);
@@ -168,7 +182,7 @@ namespace CosmosDbRepositorySubstituteTest
 
             (Exception Exception, TestData<Guid> Result) repoResult;
 
-            using (var context = CreateContext(repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
+            using (var context = CreateContext(_services, repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
             {
                 var tmp = await context.Repo.AddAsync(data);
                 tmp.Data = "Two";

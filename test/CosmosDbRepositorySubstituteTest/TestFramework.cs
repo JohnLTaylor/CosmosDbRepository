@@ -12,42 +12,39 @@ namespace CosmosDbRepositorySubstituteTest
     [TestClass]
     public static class TestFramework
     {
-        public static ServiceProvider Services;
-
-        [AssemblyInitialize]
-        public static void Initialize(TestContext context)
+        public static IServiceProvider Initialize()
         {
             var configuration = new ConfigurationBuilder()
             .AddJsonFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "testsettings.json"))
             .AddEnvironmentVariables()
             .Build();
 
-            ServiceCollection services = new ServiceCollection();
-            services.Configure<CosmosDbConfig>(configuration.GetSection("CosmosDbConfig"));
-            services.Configure<TestConfig>(configuration.GetSection("TestConfig"));
-            services.Configure<EnvironmentConfig>(configuration.GetSection("EnvironmentConfig"));
-            Services = services.BuildServiceProvider();
+            ServiceCollection serviceCollection = new ServiceCollection();
+            serviceCollection.Configure<CosmosDbConfig>(configuration.GetSection("CosmosDbConfig"));
+            serviceCollection.Configure<TestConfig>(configuration.GetSection("TestConfig"));
+            serviceCollection.Configure<EnvironmentConfig>(configuration.GetSection("EnvironmentConfig"));
+            var services = serviceCollection.BuildServiceProvider();
 
-            var envConfig = Services.GetRequiredService<IOptions<EnvironmentConfig>>().Value;
+            var envConfig = services.GetRequiredService<IOptions<EnvironmentConfig>>().Value;
 
             if (envConfig.RandomizeDbName)
             {
-                var dbConfig = Services.GetRequiredService<IOptions<CosmosDbConfig>>().Value ;
+                var dbConfig = services.GetRequiredService<IOptions<CosmosDbConfig>>().Value ;
                 dbConfig.DbName = $"{dbConfig.DbName}!{Guid.NewGuid()}";
             }
+
+            return services;
         }
 
-
-        [AssemblyCleanup]
-        public static void Cleanup()
+        public static void Cleanup(IServiceProvider services)
         {
-            if (Services != null)
+            if (services != null)
             {
-                var envConfig = Services.GetRequiredService<IOptions<EnvironmentConfig>>().Value;
+                var envConfig = services.GetRequiredService<IOptions<EnvironmentConfig>>().Value;
 
                 if (envConfig.DeleteDatabaseOnClose)
                 {
-                    var dbConfig = Services.GetRequiredService<IOptions<CosmosDbConfig>>().Value;
+                    var dbConfig = services.GetRequiredService<IOptions<CosmosDbConfig>>().Value;
 
                     var client = new DocumentClient(new Uri(dbConfig.DbEndPoint), dbConfig.DbKey);
                     var repo = new CosmosDbBuilder()

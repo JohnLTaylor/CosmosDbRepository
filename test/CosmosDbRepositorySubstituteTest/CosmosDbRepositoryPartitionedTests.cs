@@ -24,9 +24,9 @@ namespace CosmosDbRepositorySubstituteTest
             return context.Repo.AddAsync(data);
         }
 
-        protected IPartitionedTestingContext<T> CreateContext(Action<ICosmosDbBuilder> builderCallback = null, Action<ICosmosDbRepositoryBuilder<T>> repoBuilderCallback = null)
+        protected IPartitionedTestingContext<T> CreateContext(IServiceProvider services, Action<ICosmosDbBuilder> builderCallback = null, Action<ICosmosDbRepositoryBuilder<T>> repoBuilderCallback = null)
         {
-            return new PartitionedTestingContext<T>(builderCallback, repoBuilderCallback);
+            return new PartitionedTestingContext<T>(services, builderCallback, repoBuilderCallback);
         }
 
         protected IPartitionedTestingContext<T> CreateSubstituteContext(Func<T, object> partionkeySelector)
