@@ -1,5 +1,6 @@
 ﻿using CosmosDbRepository;
 using CosmosDbRepository.Substitute;
+using System;
 
 namespace CosmosDbRepositorySubstituteTest
 {
@@ -8,9 +9,9 @@ namespace CosmosDbRepositorySubstituteTest
     {
         public ICosmosDbRepository<T> Repo { get; private set; }
 
-        public TestingSubstituteContext()
+        public TestingSubstituteContext(Func<T, object> partionkeySelector, bool? partitioned)
         {
-            Repo = new CosmosDbRepositorySubstitute<T>();
+            Repo = new CosmosDbRepositorySubstitute<T>(partionkeySelector, partitioned);
         }
 
         public void Dispose()

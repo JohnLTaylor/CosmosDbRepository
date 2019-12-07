@@ -10,7 +10,7 @@ namespace CosmosDbRepositorySubstituteTest
 {
     [TestClass]
     public class PartitionedSubstituteTest
-        : CosmosDbRepositoryPartitionedTests<TestData<Guid>>
+        : CosmosDbRepositoryTests<TestData<Guid>>
     {
         private const string IgnoreGeneratedFields = "Item2.ETag|Item2.UpdateEpoch";
         private const string IgnoreExceptionFields = "Item1.InnerException.TargetSite|Item1.InnerException.StackTrace|Item1.InnerException.Source|Item1.InnerException.IPForWatsonBuckets";
@@ -200,6 +200,35 @@ namespace CosmosDbRepositorySubstituteTest
 
             subResult.Should().BeEquivalentTo(repoResult, opt => opt.Excluding(su =>
                     Regex.IsMatch(su.SelectedMemberPath, IgnoreExceptionMessageFields)));
+        }
+
+        [TestMethod]
+        public async Task AddAndGetWithPartitionKey()
+        {
+            var data = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "One"
+            };
+
+            (Exception Exception, TestData<Guid> Result) repoResult;
+
+            using (var context = CreateContext(_services, repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
+            {
+                var tmp = await context.Repo.AddAsync(data);
+                repoResult = await context.Repo.GetAsync(tmp).ContinueWith(CaptureResult);
+            }
+
+            (Exception Exception, TestData<Guid>) subResult;
+
+            using (var context = CreateSubstituteContext(i => i.Data))
+            {
+                var tmp = await context.Repo.AddAsync(data);
+                subResult = await context.Repo.GetAsync(tmp).ContinueWith(CaptureResult);
+            }
+
+            subResult.Should().BeEquivalentTo(repoResult, opt => opt.Excluding(su =>
+                    Regex.IsMatch(su.SelectedMemberPath, IgnoreGeneratedFields)));
         }
 
         private (Exception Exception, T Result) CaptureResult<T>(Task<T> task)

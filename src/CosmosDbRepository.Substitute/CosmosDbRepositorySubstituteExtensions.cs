@@ -14,7 +14,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnGetWhen(predicate, statusCode, message);
@@ -28,7 +28,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnGetWhen(predicate, statusCode, message);
@@ -38,7 +38,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnGet();
@@ -52,7 +52,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnAddWhen(predicate, statusCode, message);
@@ -62,7 +62,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnAdd();
@@ -76,7 +76,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnDeleteWhen(predicate, statusCode, message);
@@ -90,7 +90,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnDeleteWhen(predicate, statusCode, message);
@@ -100,7 +100,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnDelete();
@@ -114,7 +114,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnFindWhen(predicate, statusCode, message);
@@ -124,7 +124,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnFind();
@@ -138,7 +138,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnFindFirstOrDefaultWhen(predicate, statusCode, message);
@@ -148,7 +148,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnFindFirstOrDefault();
@@ -162,7 +162,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnReplaceWhen(predicate, statusCode, message);
@@ -172,7 +172,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnReplace();
@@ -186,7 +186,7 @@ namespace CosmosDbRepository.Substitute
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnSelectWhen(predicate, statusCode, message);
@@ -196,7 +196,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnSelect();
@@ -210,7 +210,7 @@ namespace CosmosDbRepository.Substitute
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnSelectManyWhen(predicate, statusCode, message);
@@ -220,7 +220,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnSelectMany();
@@ -234,7 +234,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnUpsertWhen(predicate, statusCode, message);
@@ -244,7 +244,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnUpsert();
@@ -258,7 +258,7 @@ namespace CosmosDbRepository.Substitute
             if (self is null) throw new ArgumentNullException(nameof(self));
             if (predicate is null) throw new ArgumentNullException(nameof(predicate));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.GenerateExceptionOnCountWhen(predicate, statusCode, message);
@@ -268,7 +268,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.ClearGenerateExceptionOnCount();
@@ -278,7 +278,7 @@ namespace CosmosDbRepository.Substitute
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
-            if (!(self is CosmosDbRepositorySubstituteBase<T> substitute))
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.SetStoredProcedureHandler(id, func);

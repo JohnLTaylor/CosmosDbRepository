@@ -24,14 +24,14 @@ namespace CosmosDbRepositorySubstituteTest
             return context.Repo.AddAsync(data);
         }
 
-        protected ITestingContext<T> CreateContext(IServiceProvider services, Action<ICosmosDbBuilder> builderCallback = null, Action<ICosmosDbRepositoryBuilder> repoBuilderCallback = null)
+        protected ITestingContext<T> CreateContext(IServiceProvider services, Action<ICosmosDbBuilder> builderCallback = null, Action<ICosmosDbRepositoryBuilder<T>> repoBuilderCallback = null)
         {
             return new TestingContext<T>(services, builderCallback, repoBuilderCallback);
         }
 
-        protected ITestingContext<T> CreateSubstituteContext()
+        protected ITestingContext<T> CreateSubstituteContext(Func<T, object> partionkeySelector = null, bool? partitioned = null)
         {
-            return new TestingSubstituteContext<T>();
+            return new TestingSubstituteContext<T>(partionkeySelector, partitioned);
         }
     }
 }

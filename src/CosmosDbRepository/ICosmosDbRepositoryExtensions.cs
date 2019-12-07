@@ -176,7 +176,7 @@ namespace CosmosDbRepository
         {
             requestOptions = requestOptions.ShallowCopy() ?? new RequestOptions();
 
-            object pk = CosmosDbRepository.Implementation.CosmosDbRepository.IndirectlySupportedIndexTypes.Contains(partitionKey.GetType())
+            object pk = Implementation.CosmosDbRepository.IndirectlySupportedIndexTypes.Contains(partitionKey.GetType())
                 ? (object)partitionKey.ToString()
                 : partitionKey;
 
@@ -188,7 +188,7 @@ namespace CosmosDbRepository
         {
             feedOptions = feedOptions.ShallowCopy() ?? new FeedOptions();
 
-            object pk = CosmosDbRepository.Implementation.CosmosDbRepository.IndirectlySupportedIndexTypes.Contains(partitionKey.GetType())
+            object pk = Implementation.CosmosDbRepository.IndirectlySupportedIndexTypes.Contains(partitionKey.GetType())
                 ? (object)partitionKey.ToString()
                 : partitionKey;
 
