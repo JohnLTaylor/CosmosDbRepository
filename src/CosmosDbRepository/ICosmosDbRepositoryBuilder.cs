@@ -11,6 +11,7 @@ namespace CosmosDbRepository
     public interface ICosmosDbRepositoryBuilder<T>
         : ICosmosDbRepositoryBuilder
     {
+        ICosmosDbRepositoryBuilder<T> NoCreate();
         ICosmosDbRepositoryBuilder<T> WithId(string name);
         ICosmosDbRepositoryBuilder<T> WithThroughput(int? defaultThroughput);
         ICosmosDbRepositoryBuilder<T> IncludeIndexPath(string path, params Index[] indexes);

@@ -13,10 +13,17 @@ namespace CosmosDbRepository.Implementation
         private List<ExcludedPath> _excludePaths = new List<ExcludedPath>();
         private List<StoredProcedure> _storedProcedure = new List<StoredProcedure>();
         private IndexingMode _indexingMode = IndexingMode.Consistent;
+        private bool _createOnMissing = true;
         private int? _throughput;
         private Func<T, object> _partitionkeySelector;
         private List<string> _partitionKeyPaths = new List<string>();
         public string Id { get; private set; }
+
+        public ICosmosDbRepositoryBuilder<T> NoCreate()
+        {
+            _createOnMissing = false;
+            return this;
+        }
 
         public ICosmosDbRepositoryBuilder<T> WithId(string id)
         {
@@ -122,7 +129,7 @@ namespace CosmosDbRepository.Implementation
                 indexingPolicy.ExcludedPaths = new Collection<ExcludedPath>(_excludePaths);
             }
 
-            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, _partitionkeySelector, partitionkeyDefinition, _throughput ?? defaultThroughput, _storedProcedure);
+            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, _partitionkeySelector, partitionkeyDefinition, _throughput ?? defaultThroughput, _storedProcedure, _createOnMissing);
         }
     }
 }

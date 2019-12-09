@@ -28,7 +28,7 @@ namespace CosmosDbRepository.Substitute
         private readonly List<Func<DocumentClientException>> _selectManyExceptionConditions = new List<Func<DocumentClientException>>();
         private readonly List<Func<T, DocumentClientException>> _upsertExceptionConditions = new List<Func<T, DocumentClientException>>();
         private readonly List<Func<DocumentClientException>> _countExceptionConditions = new List<Func<DocumentClientException>>();
-        private readonly Dictionary<string, Func<object[], object>> _storedProcedureCallback = new Dictionary<string, Func<object[], object>>();
+        private readonly Dictionary<string, Func<object[], Task<object>>> _storedProcedureCallback = new Dictionary<string, Func<object[], Task<object>>>();
         private readonly Dictionary<string, List<EntityStorage>> _entities = new Dictionary<string, List<EntityStorage>>();
         private readonly Func<T, object> _partitionkeySelector;
         private readonly bool _partitioned;
@@ -816,7 +816,7 @@ namespace CosmosDbRepository.Substitute
             _countExceptionConditions.Clear();
         }
 
-        internal void SetStoredProcedureHandler(string id, Func<object[], object> func)
+        internal void SetStoredProcedureHandler(string id, Func<object[], Task<object>> func)
         {
             _storedProcedureCallback[id] = func;
         }

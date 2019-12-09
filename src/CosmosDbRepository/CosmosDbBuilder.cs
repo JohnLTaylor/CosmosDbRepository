@@ -11,8 +11,15 @@ namespace CosmosDbRepository
     {
         private List<ICosmosDbRepositoryBuilder> _collectionBuilders = new List<ICosmosDbRepositoryBuilder>();
         private int? _defaultThroughput;
+        private bool _createOnMissing = true;
 
         public string Id { get; private set; }
+
+        public ICosmosDbBuilder NoCreate()
+        {
+            _createOnMissing = false;
+            return this;
+        }
 
         public ICosmosDbBuilder WithId(string Id)
         {
@@ -55,7 +62,7 @@ namespace CosmosDbRepository
         {
             if (string.IsNullOrWhiteSpace(Id)) throw new InvalidOperationException("Id not specified");
 
-            var documentDb = new CosmosDb(client, Id, _defaultThroughput, _collectionBuilders);
+            var documentDb = new CosmosDb(client, Id, _defaultThroughput, _collectionBuilders, _createOnMissing);
 
             return documentDb;
         }

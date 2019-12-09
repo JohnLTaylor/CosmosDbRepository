@@ -5,6 +5,7 @@ namespace CosmosDbRepository
 {
     public interface ICosmosDbBuilder
     {
+        ICosmosDbBuilder NoCreate();
         ICosmosDbBuilder WithId(string name);
         ICosmosDbBuilder WithDefaultThroughput(int? defaultThroughput);
         ICosmosDbBuilder AddCollection<T>(string id = null, Action<ICosmosDbRepositoryBuilder<T>> func = null);

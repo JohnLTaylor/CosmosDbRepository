@@ -19,7 +19,7 @@ namespace CosmosDbRepository.Implementation
 
         Task<string> ICosmosDb.SelfLinkAsync => SelfLinkAsync();
 
-        public CosmosDb(IDocumentClient client, string databaseId, int? defaultThroughput, IEnumerable<ICosmosDbRepositoryBuilder> repositories)
+        public CosmosDb(IDocumentClient client, string databaseId, int? defaultThroughput, IEnumerable<ICosmosDbRepositoryBuilder> repositories, bool createOnMissing)
         {
             if (string.IsNullOrWhiteSpace(databaseId))
             {
@@ -30,7 +30,7 @@ namespace CosmosDbRepository.Implementation
             _id = databaseId;
             _defaultThroughput = defaultThroughput;
 
-            _database = new AsyncLazy<Database>(() => GetOrCreateDatabaseAsync());
+            _database = new AsyncLazy<Database>(() => GetOrCreateDatabaseAsync(createOnMissing));
             _repositories = repositories.Select(cb => cb.Build(_client, this, _defaultThroughput)).ToList();
         }
 
@@ -62,13 +62,15 @@ namespace CosmosDbRepository.Implementation
             }
         }
 
-        private async Task<Database> GetOrCreateDatabaseAsync()
+        private async Task<Database> GetOrCreateDatabaseAsync(bool createOnMissing)
         {
             var database = _client.CreateDatabaseQuery().Where(db => db.Id == _id).AsEnumerable().FirstOrDefault();
 
             return database != null
                 ? database
-                : await _client.CreateDatabaseAsync(new Database { Id = _id });
+                : createOnMissing
+                ? await _client.CreateDatabaseAsync(new Database { Id = _id })
+                : throw new InvalidOperationException($"Database { _id } does not exist");
         }
     }
 }

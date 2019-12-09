@@ -34,6 +34,7 @@ namespace CosmosDbRepository.Implementation
         private readonly FeedOptions _defaultFeedOptions;
         private readonly bool _hasPartionKey;
         private readonly int? _throughput;
+        private readonly bool _createOnMissing;
         private readonly List<StoredProcedure> _storedProcedures;
         private AsyncLazy<DocumentCollection> _collection;
         private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
@@ -49,8 +50,10 @@ namespace CosmosDbRepository.Implementation
                                   Func<T, object> partionkeySelector,
                                   PartitionKeyDefinition partitionkeyDefinition,
                                   int? throughput,
-                                  IEnumerable<StoredProcedure> storedProcedures)
+                                  IEnumerable<StoredProcedure> storedProcedures,
+                                  bool createOnMissing)
         {
+            _createOnMissing = createOnMissing;
             _documentDb = documentDb;
             _client = client;
             Id = id;
@@ -83,7 +86,7 @@ namespace CosmosDbRepository.Implementation
                 EnableCrossPartitionQuery = !_hasPartionKey
             };
 
-            _collection = new AsyncLazy<DocumentCollection>(() => GetOrCreateCollectionAsync());
+            _collection = new AsyncLazy<DocumentCollection>(() => GetOrCreateCollectionAsync(createOnMissing));
         }
 
         public async Task<T> AddAsync(T entity, RequestOptions requestOptions = null)
@@ -475,7 +478,7 @@ namespace CosmosDbRepository.Implementation
         public async Task<bool> DeleteAsync(RequestOptions requestOptions = null)
         {
             var response = await _client.DeleteDocumentCollectionAsync((await _collection).SelfLink, requestOptions);
-            _collection = new AsyncLazy<DocumentCollection>(async () => await GetOrCreateCollectionAsync());
+            _collection = new AsyncLazy<DocumentCollection>(async () => await GetOrCreateCollectionAsync(_createOnMissing));
 
             return response.StatusCode == HttpStatusCode.NoContent;
         }
@@ -501,7 +504,7 @@ namespace CosmosDbRepository.Implementation
         public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(_client, this, id);
 
 
-        private async Task<DocumentCollection> GetOrCreateCollectionAsync()
+        private async Task<DocumentCollection> GetOrCreateCollectionAsync(bool createOnMissing)
         {
             var documentCollection = new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy };
 
@@ -510,10 +513,13 @@ namespace CosmosDbRepository.Implementation
                 documentCollection.PartitionKey = _partitionkeyDefinition;
             }
 
-            var resourceResponse = await _client.CreateDocumentCollectionIfNotExistsAsync(
-                await _documentDb.SelfLinkAsync,
-                documentCollection,
-                new RequestOptions { OfferThroughput = _throughput });
+            var resourceResponse =
+                createOnMissing
+                ? await _client.CreateDocumentCollectionIfNotExistsAsync(
+                    await _documentDb.SelfLinkAsync,
+                    documentCollection,
+                    new RequestOptions { OfferThroughput = _throughput })
+                : await _client.ReadDocumentCollectionAsync($"{await _documentDb.SelfLinkAsync}/colls/{Uri.EscapeUriString(Id)}");
 
             if (_storedProcedures.Any())
             {
