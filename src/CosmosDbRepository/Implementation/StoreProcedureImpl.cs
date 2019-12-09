@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
@@ -31,9 +32,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync()
+        public async Task<TResult> ExecuteAsync(RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, requestOptions);
         }
     }
 
@@ -46,9 +47,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam param)
+        public async Task<TResult> ExecuteAsync(TParam param, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param);
         }
     }
 
@@ -61,9 +62,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2);
         }
     }
 
@@ -76,9 +77,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3);
         }
     }
 
@@ -91,9 +92,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4);
         }
     }
 
@@ -106,9 +107,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5);
         }
     }
 
@@ -121,9 +122,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6);
         }
     }
 
@@ -136,9 +137,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7);
         }
     }
 
@@ -151,9 +152,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7, param8);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7, param8);
         }
     }
 
@@ -166,9 +167,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7, param8, param9);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7, param8, param9);
         }
     }
 
@@ -181,9 +182,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10);
         }
     }
 
@@ -196,9 +197,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11);
         }
     }
 
@@ -211,9 +212,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12);
         }
     }
 
@@ -226,9 +227,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12, TParam13 param13)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12, TParam13 param13, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13);
         }
     }
 
@@ -241,9 +242,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12, TParam13 param13, TParam14 param14)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12, TParam13 param13, TParam14 param14, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13, param14);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13, param14);
         }
     }
 
@@ -256,9 +257,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12, TParam13 param13, TParam14 param14, TParam15 param15)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12, TParam13 param13, TParam14 param14, TParam15 param15, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13, param14, param15);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13, param14, param15);
         }
     }
 
@@ -271,9 +272,9 @@ namespace CosmosDbRepository.Implementation
         {
         }
 
-        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12, TParam13 param13, TParam14 param14, TParam15 param15, TParam16 param16)
+        public async Task<TResult> ExecuteAsync(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4, TParam5 param5, TParam6 param6, TParam7 param7, TParam8 param8, TParam9 param9, TParam10 param10, TParam11 param11, TParam12 param12, TParam13 param13, TParam14 param14, TParam15 param15, TParam16 param16, RequestOptions requestOptions)
         {
-            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13, param14, param15, param16);
+            return await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12, param13, param14, param15, param16);
         }
     }
 }

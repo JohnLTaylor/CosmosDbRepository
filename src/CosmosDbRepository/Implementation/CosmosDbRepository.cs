@@ -519,7 +519,7 @@ namespace CosmosDbRepository.Implementation
                     await _documentDb.SelfLinkAsync,
                     documentCollection,
                     new RequestOptions { OfferThroughput = _throughput })
-                : await _client.ReadDocumentCollectionAsync($"{await _documentDb.SelfLinkAsync}/colls/{Uri.EscapeUriString(Id)}");
+                : await _client.ReadDocumentCollectionAsync($"{await _documentDb.AltLinkAsync}/colls/{Uri.EscapeUriString(Id)}");
 
             if (_storedProcedures.Any())
             {

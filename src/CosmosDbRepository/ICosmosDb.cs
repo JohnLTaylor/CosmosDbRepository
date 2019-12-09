@@ -6,6 +6,7 @@ namespace CosmosDbRepository
     public interface ICosmosDb
     {
         Task<string> SelfLinkAsync { get; }
+        Task<string> AltLinkAsync { get; }
         ICosmosDbRepository<T> Repository<T>();
         ICosmosDbRepository<T> Repository<T>(string id);
         Task<bool> DeleteAsync(RequestOptions options = null);

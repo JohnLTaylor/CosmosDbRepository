@@ -18,6 +18,7 @@ namespace CosmosDbRepository.Implementation
         private readonly List<ICosmosDbRepository> _repositories;
 
         Task<string> ICosmosDb.SelfLinkAsync => SelfLinkAsync();
+        Task<string> ICosmosDb.AltLinkAsync => AltLinkAsync();
 
         public CosmosDb(IDocumentClient client, string databaseId, int? defaultThroughput, IEnumerable<ICosmosDbRepositoryBuilder> repositories, bool createOnMissing)
         {
@@ -35,6 +36,8 @@ namespace CosmosDbRepository.Implementation
         }
 
         public async Task<string> SelfLinkAsync() => (await _database).SelfLink;
+
+        public async Task<string> AltLinkAsync() => (await _database).AltLink;
 
         public ICosmosDbRepository<T> Repository<T>(string name)
         {
