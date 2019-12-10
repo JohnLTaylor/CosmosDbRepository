@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.Azure.Documents;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -263,6 +264,65 @@ namespace CosmosDbRepositorySubstituteTest
 
             subResult.Should().BeEquivalentTo(repoResult, opt => opt.Excluding(su =>
                     Regex.IsMatch(su.SelectedMemberPath, "Item2.ETag|Item2.UpdateEpoch")));
+        }
+
+        [TestMethod]
+        public async Task FindItems()
+        {
+            var dataOne = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "One"
+            };
+
+            var dataTwo = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "Two"
+            };
+
+            (Exception Exception, IList<TestData<Guid>> Result) repoResult;
+
+            using (var context = CreateContext(_services))
+            {
+                await context.Repo.AddAsync(dataOne);
+                await context.Repo.AddAsync(dataTwo);
+
+                repoResult = await context.Repo.FindAsync().ContinueWith(CaptureResult);
+            }
+
+            (Exception Exception, IList<TestData<Guid>>) subResult;
+
+            using (var context = CreateSubstituteContext())
+            {
+                await context.Repo.AddAsync(dataOne);
+                await context.Repo.AddAsync(dataTwo);
+
+                subResult = await context.Repo.FindAsync().ContinueWith(CaptureResult);
+            }
+
+            subResult.Should().BeEquivalentTo(repoResult, opt => opt.Excluding(su =>
+                    Regex.IsMatch(su.SelectedMemberPath, @"Item2\[.\]\.ETag|Item2\[.\]\.UpdateEpoch")));
+        }
+
+        [TestMethod]
+        public async Task FindNoItems()
+        {
+            (Exception Exception, IList<TestData<Guid>> Result) repoResult;
+
+            using (var context = CreateContext(_services))
+            {
+                repoResult = await context.Repo.FindAsync().ContinueWith(CaptureResult);
+            }
+
+            (Exception Exception, IList<TestData<Guid>>) subResult;
+
+            using (var context = CreateSubstituteContext())
+            {
+                subResult = await context.Repo.FindAsync().ContinueWith(CaptureResult);
+            }
+
+            subResult.Should().BeEquivalentTo(repoResult);
         }
 
         private (Exception Exception, T Result) CaptureResult<T>(Task<T> task)

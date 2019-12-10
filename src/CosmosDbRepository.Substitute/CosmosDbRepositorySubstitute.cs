@@ -176,7 +176,7 @@ namespace CosmosDbRepository.Substitute
                 }
                 catch (Exception e)
                 {
-                    return Task.FromException< CosmosDbRepositoryPagedResults<T>>(e);
+                    return Task.FromException<CosmosDbRepositoryPagedResults<T>>(e);
                 }
 
                 if (predicate != default(Expression<Func<T, bool>>))
@@ -1152,12 +1152,9 @@ namespace CosmosDbRepository.Substitute
                     return _entities.Values.SelectMany(l => l.Select(i => DeepClone(i.Entity))).ToArray();
                 }
 
-                if (!_entities.TryGetValue(partitionKey.ToString(), out var entities))
-                {
-                    throw CreateDbException(HttpStatusCode.NotFound, "Not Found");
-                }
+                _entities.TryGetValue(partitionKey.ToString(), out var entities);
 
-                return entities.Select(i => DeepClone(i.Entity)).ToArray();
+                return entities?.Select(i => DeepClone(i.Entity)).ToArray() ?? new T[0];
             }
         }
 
