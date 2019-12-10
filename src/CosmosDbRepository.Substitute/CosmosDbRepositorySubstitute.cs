@@ -1232,7 +1232,7 @@ namespace CosmosDbRepository.Substitute
             var partitionKey = _partitionkeySelector(entity);
 
             object pk = IndirectlySupportedIndexTypes.Contains(partitionKey.GetType())
-                ? (object)partitionKey.ToString()
+                ? (object)partitionKey?.ToString()
                 : partitionKey;
 
             return new PartitionKey(pk);
