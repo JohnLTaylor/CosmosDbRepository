@@ -2,6 +2,7 @@
 using Microsoft.Azure.Documents.Client;
 using System;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace CosmosDbRepository.Substitute
 {
@@ -275,7 +276,7 @@ namespace CosmosDbRepository.Substitute
             substitute.ClearGenerateExceptionOnCount();
         }
 
-        public static void SetStoredProcedureHandler<T>(this ICosmosDbRepository<T> self, string id, Func<object[], RequestOptions, object> func)
+        public static void SetStoredProcedureHandler<T>(this ICosmosDbRepository<T> self, string id, Func<object[], RequestOptions, Task<object>> func)
         {
             if (self is null) throw new ArgumentNullException(nameof(self));
 
