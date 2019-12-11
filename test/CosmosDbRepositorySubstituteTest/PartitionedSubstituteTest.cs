@@ -318,6 +318,68 @@ namespace CosmosDbRepositorySubstituteTest
         }
 
         [TestMethod]
+        public async Task SelectItemsTwoPartitions()
+        {
+            var dataOneA = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "One"
+            };
+
+            var dataOneB = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "One"
+            };
+
+            var dataTwoA = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "Two"
+            };
+
+            var dataTwoB = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "Two"
+            };
+
+            (Exception Exception, IList<Guid> Result) repoResultOne;
+            (Exception Exception, IList<Guid> Result) repoResultTwo;
+
+            using (var context = CreateContext(_services, repoBuilderCallback: b => b.IncludePartitionkeyPath("/data").IncludePartitionkeySelector(i => i.Data)))
+            {
+                await context.Repo.AddAsync(dataOneA);
+                await context.Repo.AddAsync(dataOneB);
+                await context.Repo.AddAsync(dataTwoA);
+                await context.Repo.AddAsync(dataTwoB);
+
+                repoResultOne = await context.Repo.SelectAsync(partitionKey: dataOneA.Data, selector: d => d.Id, selectClauses: d => d).ContinueWith(CaptureResult);
+                repoResultTwo = await context.Repo.SelectAsync(partitionKey: dataTwoA.Data, selector: d => d.Id, selectClauses: d => d).ContinueWith(CaptureResult);
+            }
+
+            (Exception Exception, IList<Guid>) subResultOne;
+            (Exception Exception, IList<Guid>) subResultTwo;
+
+            using (var context = CreateSubstituteContext(i => i.Data))
+            {
+                await context.Repo.AddAsync(dataOneA);
+                await context.Repo.AddAsync(dataOneB);
+                await context.Repo.AddAsync(dataTwoA);
+                await context.Repo.AddAsync(dataTwoB);
+
+                subResultOne = await context.Repo.SelectAsync(partitionKey: dataOneA.Data, selector: d => d.Id, selectClauses: d => d).ContinueWith(CaptureResult);
+                subResultTwo = await context.Repo.SelectAsync(partitionKey: dataTwoA.Data, selector: d => d.Id, selectClauses: d => d).ContinueWith(CaptureResult);
+            }
+
+            subResultOne.Should().BeEquivalentTo(repoResultOne, opt => opt.Excluding(su =>
+                    Regex.IsMatch(su.SelectedMemberPath, IgnoreArrayGeneratedFields)));
+
+            subResultTwo.Should().BeEquivalentTo(repoResultTwo, opt => opt.Excluding(su =>
+                    Regex.IsMatch(su.SelectedMemberPath, IgnoreArrayGeneratedFields)));
+        }
+
+        [TestMethod]
         public async Task FindItemsWrongPartition()
         {
             var dataOne = new TestData<Guid>

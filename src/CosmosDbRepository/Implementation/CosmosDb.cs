@@ -55,6 +55,12 @@ namespace CosmosDbRepository.Implementation
             return response.StatusCode == HttpStatusCode.NoContent;
         }
 
+        public async Task<DocumentCollection[]> GetCollections(FeedOptions feedOptions = null)
+        {
+            var collections = _client.CreateDocumentCollectionQuery(await SelfLinkAsync(), feedOptions);
+            return collections.ToArray();
+        }
+
         public async Task Init()
         {
             await _database;

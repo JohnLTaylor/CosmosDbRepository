@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Documents.Client;
+﻿using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using System.Threading.Tasks;
 
 namespace CosmosDbRepository
@@ -10,6 +11,7 @@ namespace CosmosDbRepository
         ICosmosDbRepository<T> Repository<T>();
         ICosmosDbRepository<T> Repository<T>(string id);
         Task<bool> DeleteAsync(RequestOptions options = null);
+        Task<DocumentCollection[]> GetCollections(FeedOptions feedOptions = null);
 
         // If you do not call init then the database and repositories
         // will be constructed as needed
