@@ -38,6 +38,9 @@ namespace CosmosDbRepository.Implementation
         private readonly List<StoredProcedure> _storedProcedures;
         private AsyncLazy<DocumentCollection> _collection;
         private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
+        private readonly Func<Document, T> _deserializer;
+        private string _polymorphicField;
+        private Dictionary<string, Func<Document, T>> _polymorphicDeserializer;
 
         public string Id { get; }
         public Type Type => typeof(T);
@@ -51,7 +54,9 @@ namespace CosmosDbRepository.Implementation
                                   PartitionKeyDefinition partitionkeyDefinition,
                                   int? throughput,
                                   IEnumerable<StoredProcedure> storedProcedures,
-                                  bool createOnMissing)
+                                  bool createOnMissing,
+                                  string polymorphicField,
+                                  (string Value, Type Type)[] polymorphicTypes)
         {
             _createOnMissing = createOnMissing;
             _documentDb = documentDb;
@@ -86,6 +91,13 @@ namespace CosmosDbRepository.Implementation
                 EnableCrossPartitionQuery = !_hasPartionKey
             };
 
+            _polymorphicField = polymorphicField;
+            _polymorphicDeserializer = polymorphicTypes?.ToDictionary(vt => vt.Value, vt => MakeCustomDeserializer(vt.Type));
+
+            _deserializer = _polymorphicField != default
+                          ? (Func<Document, T>)CustomDeserializer
+                          : CustomDeserializer<T>;
+
             _collection = new AsyncLazy<DocumentCollection>(() => GetOrCreateCollectionAsync(createOnMissing));
         }
 
@@ -94,7 +106,7 @@ namespace CosmosDbRepository.Implementation
             requestOptions = GetPartionKey(entity, requestOptions);
 
             var addedDoc = await _client.CreateDocumentAsync((await _collection).SelfLink, entity, requestOptions);
-            return JsonConvert.DeserializeObject<T>(addedDoc.Resource.ToString());
+            return _deserializer(addedDoc.Resource);
         }
 
         public async Task<T> ReplaceAsync(T entity, RequestOptions requestOptions = null)
@@ -115,7 +127,7 @@ namespace CosmosDbRepository.Implementation
 
             return (response.StatusCode == HttpStatusCode.NotModified)
                 ? entity
-                : JsonConvert.DeserializeObject<T>(response.Resource.ToString());
+                : _deserializer(response.Resource);
         }
 
         public async Task<T> UpsertAsync(T entity, RequestOptions requestOptions = null)
@@ -132,7 +144,7 @@ namespace CosmosDbRepository.Implementation
 
             var response = await _client.UpsertDocumentAsync((await _collection).SelfLink, entity, requestOptions);
 
-            return JsonConvert.DeserializeObject<T>(response.Resource.ToString());
+            return _deserializer(response.Resource);
         }
 
         public async Task<IList<T>> FindAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
@@ -149,8 +161,8 @@ namespace CosmosDbRepository.Implementation
 
             while (query.HasMoreResults)
             {
-                var response = await query.ExecuteNextAsync<T>().ConfigureAwait(true);
-                results.AddRange(response);
+                var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                results.AddRange(response.Select(doc => _deserializer(doc)));
             }
 
             return results;
@@ -175,8 +187,8 @@ namespace CosmosDbRepository.Implementation
 
             while (query.HasMoreResults)
             {
-                var response = await query.ExecuteNextAsync<T>().ConfigureAwait(true);
-                result.Items.AddRange(response);
+                var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                result.Items.AddRange(response.Select(doc => _deserializer(doc)));
 
                 if (pageSize > 0 && result.Items.Count >= pageSize)
                 {
@@ -382,8 +394,11 @@ namespace CosmosDbRepository.Implementation
 
             if (query.HasMoreResults)
             {
-                var response = await query.ExecuteNextAsync<T>().ConfigureAwait(true);
-                result = response.FirstOrDefault();
+                var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                var doc = response.FirstOrDefault();
+                result = doc != default
+                    ? _deserializer(doc)
+                    : default;
             }
 
             return result;
@@ -624,5 +639,35 @@ namespace CosmosDbRepository.Implementation
             }
         }
 
+        private static Func<Document, T> MakeCustomDeserializer(Type type)
+        {
+            var deserializer = typeof(CosmosDbRepository<T>)
+                .GetMethod(nameof(CustomDeserializer), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(type);
+
+            // The func takes an int
+            var arg = Expression.Parameter(typeof(Document));
+
+            // Represent the call out to "AnotherFunc"
+            var call = Expression.Call(null, deserializer, arg);
+
+            // Build the action to just make the call to "AnotherFunc"
+            var action = Expression.Lambda<Func<Document, T>>(call, arg);
+
+            // Compile the chain and send it out
+            return action.Compile();
+        }
+
+        private T CustomDeserializer(Document document)
+        {
+            var selector = document.GetPropertyValue<string>(_polymorphicField);
+            return _polymorphicDeserializer[selector](document);
+        }
+
+        private static T CustomDeserializer<TModel>(Document document)
+            where TModel : T
+        {
+            return JsonConvert.DeserializeObject<TModel>(document.ToString());
+        }
     }
 }

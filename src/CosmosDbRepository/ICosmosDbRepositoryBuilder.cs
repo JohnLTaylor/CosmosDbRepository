@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Documents;
 using System;
+using System.Linq.Expressions;
 
 namespace CosmosDbRepository
 {
@@ -19,5 +20,6 @@ namespace CosmosDbRepository
         ICosmosDbRepositoryBuilder<T> IncludePartitionkeySelector(Func<T, object> partitionkeySelector);
         ICosmosDbRepositoryBuilder<T> ExcludeIndexPath(params string[] paths);
         ICosmosDbRepositoryBuilder<T> StoredProcedure(string id, string body);
+        ICosmosDbRepositoryBuilder<T> EnablePolymorphism<TMember>(Expression<Func<T, TMember>> typeSelectMember, params (TMember Value, Type Type)[] valueTypes);
     }
 }

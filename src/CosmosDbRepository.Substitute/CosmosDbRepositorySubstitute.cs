@@ -2,6 +2,7 @@
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,12 +33,47 @@ namespace CosmosDbRepository.Substitute
         private readonly Dictionary<string, List<EntityStorage>> _entities = new Dictionary<string, List<EntityStorage>>();
         private readonly Func<T, object> _partitionkeySelector;
         private readonly bool _partitioned;
+        private Func<JObject, T> _deserializer;
+        private string _polymorphicField;
+        private Dictionary<string, Func<JObject, T>> _polymorphicDeserializer;
 
         public CosmosDbRepositorySubstitute(Func<T, object> partitionkeySelector = null, bool? partitioned = null)
         {
+            _deserializer = CustomDeserializer<T>;
             _partitionkeySelector = partitionkeySelector;
             _partitioned = partitioned ?? partitionkeySelector != default(Func<T, object>);
         }
+
+        public CosmosDbRepositorySubstitute<T> EnablePolymorphism<TMember>(
+            Expression<Func<T, TMember>> typeSelectMember,
+            params (TMember Value, Type Type)[] valueTypes)
+        {
+            if (typeSelectMember == default)
+            {
+                throw new ArgumentNullException(nameof(typeSelectMember));
+            }
+
+            if (valueTypes?.Any() != true)
+            {
+                throw new ArgumentNullException(nameof(valueTypes));
+            }
+
+            var info = FindProperty(typeSelectMember);
+
+            _polymorphicField = info.GetCustomAttribute<JsonPropertyAttribute>(true)?.PropertyName;
+
+            if (string.IsNullOrWhiteSpace(_polymorphicField))
+            {
+                throw new InvalidOperationException("Required JsonPropertyAttribute missing");
+            }
+
+            _polymorphicDeserializer = valueTypes.ToDictionary(vt => vt.Value.ToString(), vt => MakeCustomDeserializer(vt.Type));
+
+            _deserializer = CustomDeserializer;
+
+            return this;
+        }
+
 
         public string Id => throw new NotImplementedException();
 
@@ -129,7 +165,7 @@ namespace CosmosDbRepository.Substitute
 
         public Task<bool> DeleteDocumentAsync(T entity, RequestOptions requestOptions = null)
         {
-            var item = new EntityStorage(entity);
+            var item = new EntityStorage(entity, DeepClone);
 
             var failure = _deleteExceptionConditions.Select(func => func(entity)).FirstOrDefault() ??
                           _deleteExceptionConditions.Select(func => func(item.Id)).FirstOrDefault();
@@ -250,7 +286,7 @@ namespace CosmosDbRepository.Substitute
                 requestOptions.PartitionKey = partitionKey;
             }
 
-            var item = new EntityStorage(entity);
+            var item = new EntityStorage(entity, DeepClone);
             return GetAsync(item.Id, requestOptions);
         }
 
@@ -830,16 +866,16 @@ namespace CosmosDbRepository.Substitute
             return ex;
         }
 
-        protected static T DeepClone(T src)
+        protected T DeepClone(T src)
         {
             return (Equals(src, default(T)))
                 ? default
-                : JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(src));
+                : _deserializer(JObject.FromObject(src));
         }
 
         protected bool CheckETag(T item, EntityStorage entity, out DocumentClientException exception)
         {
-            var etag = new EntityStorage(item).ETag;
+            var etag = new EntityStorage(item, DeepClone).ETag;
 
             if (!string.IsNullOrEmpty(etag) && etag != entity.ETag)
             {
@@ -849,6 +885,37 @@ namespace CosmosDbRepository.Substitute
 
             exception = default;
             return false;
+        }
+
+        private static Func<JObject, T> MakeCustomDeserializer(Type type)
+        {
+            var deserializer = typeof(CosmosDbRepositorySubstitute<T>)
+                .GetMethod(nameof(CustomDeserializer), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(type);
+
+            // The func takes an int
+            var arg = Expression.Parameter(typeof(JObject));
+
+            // Represent the call out to "AnotherFunc"
+            var call = Expression.Call(null, deserializer, arg);
+
+            // Build the action to just make the call to "AnotherFunc"
+            var action = Expression.Lambda<Func<JObject, T>>(call, arg);
+
+            // Compile the chain and send it out
+            return action.Compile();
+        }
+
+        private T CustomDeserializer(JObject document)
+        {
+            var selector = document[_polymorphicField].Value<string>();
+            return _polymorphicDeserializer[selector](document);
+        }
+
+        private static T CustomDeserializer<TModel>(JObject document)
+            where TModel : T
+        {
+            return document.ToObject<TModel>();
         }
 
         protected class EntityStorage
@@ -905,9 +972,9 @@ namespace CosmosDbRepository.Substitute
                 SetTS = BuildTSSet(tsProperty);
             }
 
-            public EntityStorage(T entity)
+            public EntityStorage(T entity, Func<T,T> deepClone)
             {
-                Entity = DeepClone(entity);
+                Entity = deepClone(entity);
             }
 
             private static Func<T, DocumentId> BuildIdGet(PropertyInfo idProperty, bool required)
@@ -1044,7 +1111,7 @@ namespace CosmosDbRepository.Substitute
 
         protected T AddEntityStorageItem(PartitionKey partitionKey, T entity)
         {
-            var item = new EntityStorage(entity);
+            var item = new EntityStorage(entity, DeepClone);
 
             if (DocumentId.IsNullOrEmpty(item.Id))
                 item.Id = Guid.NewGuid().ToString();
@@ -1070,7 +1137,7 @@ namespace CosmosDbRepository.Substitute
 
         protected T UpsertEntityStorageItem(PartitionKey partitionKey, T entity)
         {
-            var item = new EntityStorage(entity);
+            var item = new EntityStorage(entity, DeepClone);
 
             lock (_entities)
             {
@@ -1100,7 +1167,7 @@ namespace CosmosDbRepository.Substitute
 
         protected T ReplaceEntityStorageItem(PartitionKey partitionKey, T entity)
         {
-            var item = new EntityStorage(entity);
+            var item = new EntityStorage(entity, DeepClone);
 
             lock (_entities)
             {
@@ -1187,7 +1254,7 @@ namespace CosmosDbRepository.Substitute
 
         protected bool DeleteEntityStorageItem(PartitionKey partitionKey, T entity)
         {
-            var item = new EntityStorage(entity);
+            var item = new EntityStorage(entity, DeepClone);
 
             lock (_entities)
             {
@@ -1261,6 +1328,43 @@ namespace CosmosDbRepository.Substitute
         private static bool CheckCrossPartition(FeedOptions feedOptions)
         {
             return feedOptions?.EnableCrossPartitionQuery ?? false;
+        }
+
+        static MemberInfo FindProperty(LambdaExpression lambdaExpression)
+        {
+            Expression expressionToCheck = lambdaExpression;
+
+            while (true)
+            {
+                switch (expressionToCheck.NodeType)
+                {
+                    case ExpressionType.Convert:
+                        expressionToCheck = ((UnaryExpression)expressionToCheck).Operand;
+                        break;
+
+                    case ExpressionType.Lambda:
+                        expressionToCheck = ((LambdaExpression)expressionToCheck).Body;
+                        break;
+
+                    case ExpressionType.MemberAccess:
+                        var memberExpression = ((MemberExpression)expressionToCheck);
+
+                        if (memberExpression.Expression.NodeType != ExpressionType.Parameter &&
+                            memberExpression.Expression.NodeType != ExpressionType.Convert)
+                        {
+                            throw new ArgumentException(
+                                $"Expression '{lambdaExpression}' must resolve to top-level member and not any child object's properties. You can use ForPath, a custom resolver on the child type or the AfterMap option instead.",
+                                nameof(lambdaExpression));
+                        }
+
+                        var member = memberExpression.Member;
+
+                        return member;
+
+                    default:
+                        throw new InvalidOperationException("Custom configuration for members is only supported for top-level individual members on a type.");
+                }
+            }
         }
     }
 }

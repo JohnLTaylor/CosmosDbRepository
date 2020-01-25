@@ -1,8 +1,11 @@
 ﻿using Microsoft.Azure.Documents;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace CosmosDbRepository.Implementation
 {
@@ -17,6 +20,9 @@ namespace CosmosDbRepository.Implementation
         private int? _throughput;
         private Func<T, object> _partitionkeySelector;
         private List<string> _partitionKeyPaths = new List<string>();
+        private string _polymorphicField;
+        private (string, Type type)[] _polymorphicValueTypes;
+
         public string Id { get; private set; }
 
         public ICosmosDbRepositoryBuilder<T> NoCreate()
@@ -99,6 +105,33 @@ namespace CosmosDbRepository.Implementation
             return this;
         }
 
+
+        public ICosmosDbRepositoryBuilder<T> EnablePolymorphism<TMember>(Expression<Func<T, TMember>> typeSelectMember, params (TMember Value, Type Type)[] valueTypes)
+        {
+            if (typeSelectMember == default)
+            {
+                throw new ArgumentNullException(nameof(typeSelectMember));
+            }
+
+            if (valueTypes?.Any() != true)
+            {
+                throw new ArgumentNullException(nameof(valueTypes));
+            }
+
+            var info = FindProperty(typeSelectMember);
+
+            _polymorphicField = info.GetCustomAttribute<JsonPropertyAttribute>(true)?.PropertyName;
+
+            if (string.IsNullOrWhiteSpace(_polymorphicField))
+            {
+                throw new InvalidOperationException("Required JsonPropertyAttribute missing");
+            }
+
+            _polymorphicValueTypes = valueTypes.Select(vt => (vt.Value.ToString(), vt.Type)).ToArray();
+
+            return this;
+        }
+
         public ICosmosDbRepository Build(IDocumentClient client, ICosmosDb documentDb, int? defaultThroughput)
         {
             if (string.IsNullOrWhiteSpace(Id)) throw new InvalidOperationException("Id not specified");
@@ -129,7 +162,54 @@ namespace CosmosDbRepository.Implementation
                 indexingPolicy.ExcludedPaths = new Collection<ExcludedPath>(_excludePaths);
             }
 
-            return new CosmosDbRepository<T>(client, documentDb, Id, indexingPolicy, _partitionkeySelector, partitionkeyDefinition, _throughput ?? defaultThroughput, _storedProcedure, _createOnMissing);
+            return new CosmosDbRepository<T>(client,
+                                             documentDb,
+                                             Id,
+                                             indexingPolicy,
+                                             _partitionkeySelector,
+                                             partitionkeyDefinition,
+                                             _throughput ?? defaultThroughput,
+                                             _storedProcedure,
+                                             _createOnMissing,
+                                             _polymorphicField,
+                                             _polymorphicValueTypes);
+        }
+
+        static MemberInfo FindProperty(LambdaExpression lambdaExpression)
+        {
+            Expression expressionToCheck = lambdaExpression;
+
+            while (true)
+            {
+                switch (expressionToCheck.NodeType)
+                {
+                    case ExpressionType.Convert:
+                        expressionToCheck = ((UnaryExpression)expressionToCheck).Operand;
+                        break;
+
+                    case ExpressionType.Lambda:
+                        expressionToCheck = ((LambdaExpression)expressionToCheck).Body;
+                        break;
+
+                    case ExpressionType.MemberAccess:
+                        var memberExpression = ((MemberExpression)expressionToCheck);
+
+                        if (memberExpression.Expression.NodeType != ExpressionType.Parameter &&
+                            memberExpression.Expression.NodeType != ExpressionType.Convert)
+                        {
+                            throw new ArgumentException(
+                                $"Expression '{lambdaExpression}' must resolve to top-level member and not any child object's properties. You can use ForPath, a custom resolver on the child type or the AfterMap option instead.",
+                                nameof(lambdaExpression));
+                        }
+
+                        var member = memberExpression.Member;
+
+                        return member;
+
+                    default:
+                        throw new InvalidOperationException("Custom configuration for members is only supported for top-level individual members on a type.");
+                }
+            }
         }
     }
 }
