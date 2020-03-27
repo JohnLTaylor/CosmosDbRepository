@@ -379,8 +379,8 @@ namespace CosmosDbRepository.Implementation
 
         public async Task<T> FindFirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
         {
-            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
-            feedOptions.MaxItemCount = 1;
+            //feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
+            //feedOptions.MaxItemCount = 1;
 
             CheckPartionKey(feedOptions);
 
