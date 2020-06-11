@@ -36,6 +36,7 @@ namespace CosmosDbRepository.Substitute
         private Func<JObject, T> _deserializer;
         private string _polymorphicField;
         private Dictionary<string, Func<JObject, T>> _polymorphicDeserializer;
+        private Dictionary<(Type, string), object> _selectQueryFunction = new Dictionary<(Type, string), object>();
 
         public CosmosDbRepositorySubstitute(Func<T, object> partitionkeySelector = null, bool? partitioned = null)
         {
@@ -333,6 +334,63 @@ namespace CosmosDbRepository.Substitute
             {
                 return Task.FromException<T>(e);
             }
+        }
+
+        public async Task<IList<U>> SelectAsync<U>(string queryString, FeedOptions feedOptions = null)
+        {
+            var result = await SelectAsync<U>(feedOptions?.MaxItemCount ?? 0, default, queryString, feedOptions);
+            return result.Items;
+        }
+
+        public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, string queryString, FeedOptions feedOptions = null)
+        {
+            var failure = _selectExceptionConditions.Select(func => func()).FirstOrDefault();
+
+            if (failure != default(DocumentClientException))
+            {
+                return Task.FromException<CosmosDbRepositoryPagedResults<U>>(failure);
+            }
+
+            IEnumerable<U> items;
+
+            if (string.IsNullOrEmpty(continuationToken))
+            {
+                IEnumerable<T> entities;
+
+                try
+                {
+                    var partitionKey = CheckPartitionKey(feedOptions);
+                    entities = GetEntityStorageItems(partitionKey, CheckCrossPartition(feedOptions));
+                }
+                catch (Exception e)
+                {
+                    return Task.FromException<CosmosDbRepositoryPagedResults<U>>(e);
+                }
+
+                if (!_selectQueryFunction.TryGetValue((typeof(U), queryString), out var selectorFunc))
+                {
+                    return Task.FromException<CosmosDbRepositoryPagedResults<U>>(new InvalidOperationException(""));
+                }
+
+                items = ((Func<IEnumerable<T>, IEnumerable<U>>)selectorFunc)(entities).ToArray();
+            }
+            else
+            {
+                items = JsonConvert.DeserializeObject<U[]>(continuationToken);
+            }
+
+            var result = new CosmosDbRepositoryPagedResults<U>()
+            {
+                Items = items.ToList()
+            };
+
+            if (pageSize > 0 && pageSize < result.Items.Count)
+            {
+                result.ContinuationToken = JsonConvert.SerializeObject(result.Items.Skip(pageSize));
+                result.Items = result.Items.Take(pageSize).ToList();
+            }
+
+            return Task.FromResult(result);
         }
 
         public async Task<IList<U>> SelectAsync<U>(Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
@@ -855,6 +913,11 @@ namespace CosmosDbRepository.Substitute
         internal void SetStoredProcedureHandler(string id, Func<object[], RequestOptions, Task<object>> func)
         {
             _storedProcedureCallback[id] = func;
+        }
+
+        public void AddSelectQueryFunction<U>(string queryString, Func<IEnumerable<T>, IEnumerable<U>> func)
+        {
+            _selectQueryFunction[(typeof(U), queryString)] = (object)func;
         }
 
         protected static DocumentClientException CreateDbException(HttpStatusCode statusCode, string message = default)

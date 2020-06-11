@@ -267,6 +267,48 @@ namespace CosmosDbRepositorySubstituteTest
         }
 
         [TestMethod]
+        public async Task SelectItems()
+        {
+            var dataOne = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "One"
+            };
+
+            var dataTwo = new TestData<Guid>
+            {
+                Id = Guid.NewGuid(),
+                Data = "Two"
+            };
+
+            (Exception Exception, IList<TestData<Guid>> Result) repoResult;
+
+            using (var context = CreateContext(_services))
+            {
+                await context.Repo.AddAsync(dataOne);
+                await context.Repo.AddAsync(dataTwo);
+
+                repoResult = await context.Repo.SelectAsync<TestData<Guid>>("SELECT * FROM c").ContinueWith(CaptureResult);
+            }
+
+            (Exception Exception, IList<TestData<Guid>>) subResult;
+
+            using (var context = CreateSubstituteContext())
+            {
+                context.Repo.AddSelectQueryFunction("SELECT * FROM c", items => items);
+
+                await context.Repo.AddAsync(dataOne);
+                await context.Repo.AddAsync(dataTwo);
+
+
+                subResult = await context.Repo.SelectAsync<TestData<Guid>>("SELECT * FROM c").ContinueWith(CaptureResult);
+            }
+
+            subResult.Should().BeEquivalentTo(repoResult, opt => opt.Excluding(su =>
+                    Regex.IsMatch(su.SelectedMemberPath, @"Item2\[.\]\.ETag|Item2\[.\]\.UpdateEpoch")));
+        }
+
+        [TestMethod]
         public async Task FindItems()
         {
             var dataOne = new TestData<Guid>

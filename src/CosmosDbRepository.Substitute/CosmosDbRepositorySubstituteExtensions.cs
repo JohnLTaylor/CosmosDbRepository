@@ -1,6 +1,7 @@
 ﻿using CosmosDbRepository.Types;
 using Microsoft.Azure.Documents.Client;
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -284,6 +285,16 @@ namespace CosmosDbRepository.Substitute
                 throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
 
             substitute.SetStoredProcedureHandler(id, func);
+        }
+
+        public static void AddSelectQueryFunction<T,U>(this ICosmosDbRepository<T> self, string queryString, Func<IEnumerable<T>, IEnumerable<U>> func)
+        {
+            if (self is null) throw new ArgumentNullException(nameof(self));
+
+            if (!(self is CosmosDbRepositorySubstitute<T> substitute))
+                throw new ArgumentException($"self is not a CosmosDbRepositorySubstituteBase<{typeof(T).Name}>", nameof(self));
+
+            substitute.AddSelectQueryFunction(queryString, func);
         }
     }
 }

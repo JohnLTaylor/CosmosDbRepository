@@ -42,6 +42,18 @@ namespace CosmosDbRepository
             return repo.FindAsync(pageSize, continuationToken, predicate, clauses, feedOptions);
         }
 
+        public static Task<IList<U>> SelectAsync<T, U, V>(this ICosmosDbRepository<T> repo, V partitionKey, string queryString, FeedOptions feedOptions = null)
+        {
+            feedOptions = SetPartitionKey(partitionKey, feedOptions);
+            return repo.SelectAsync<U>(queryString, feedOptions);
+        }
+
+        public static Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<T, U, V>(this ICosmosDbRepository<T> repo, V partitionKey, int pageSize, string continuationToken, string queryString, FeedOptions feedOptions = null)
+        {
+            feedOptions = SetPartitionKey(partitionKey, feedOptions);
+            return repo.SelectAsync<U>(pageSize, continuationToken, queryString, feedOptions);
+        }
+
         public static Task<IList<U>> SelectAsync<T, U, V>(this ICosmosDbRepository<T> repo, V partitionKey, Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             feedOptions = SetPartitionKey(partitionKey, feedOptions);

@@ -200,6 +200,55 @@ namespace CosmosDbRepository.Implementation
             return result;
         }
 
+        public async Task<IList<U>> SelectAsync<U>(string queryString, FeedOptions feedOptions = null)
+        {
+            CheckPartionKey(feedOptions);
+
+            var query =
+                _client.CreateDocumentQuery<U>((await _collection).SelfLink, queryString, feedOptions ?? _defaultFeedOptions)
+                .AsDocumentQuery();
+
+            var results = new List<U>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                results.AddRange(response);
+            }
+
+            return results;
+        }
+
+        public async Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, string queryString, FeedOptions feedOptions = null)
+        {
+            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
+
+            feedOptions.RequestContinuation = continuationToken;
+            feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            CheckPartionKey(feedOptions);
+
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, queryString, feedOptions)
+                .AsDocumentQuery();
+
+            var result = new CosmosDbRepositoryPagedResults<U>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                result.Items.AddRange(response);
+
+                if (pageSize > 0 && result.Items.Count >= pageSize)
+                {
+                    result.ContinuationToken = response.ResponseContinuation;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
         public async Task<IList<U>> SelectAsync<U>(Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             CheckPartionKey(feedOptions);
