@@ -444,6 +444,12 @@ namespace CosmosDbRepository.Implementation
             if (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+
+                while (response.Count == 0 && !string.IsNullOrEmpty(response.ResponseContinuation))
+                {
+                    response = await query.ExecuteNextAsync<Document>();
+                }
+
                 var doc = response.FirstOrDefault();
                 result = doc != default
                     ? _deserializer(doc)
