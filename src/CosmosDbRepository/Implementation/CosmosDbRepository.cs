@@ -420,10 +420,21 @@ namespace CosmosDbRepository.Implementation
         {
             CheckPartionKey(feedOptions);
 
-            return await _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
+            var query = _client.CreateDocumentQuery<T>((await _collection).SelfLink, feedOptions ?? _defaultFeedOptions)
                 .ConditionalWhere(predicate)
                 .ConditionalApplyClauses(clauses)
-                .CountAsync();
+                .Select(r => 1)
+                .AsDocumentQuery();
+
+            var result = 0;
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<int>().ConfigureAwait(true);
+                result += response.Count();
+            }
+
+            return result;
         }
 
         public async Task<T> FindFirstOrDefaultAsync(Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
