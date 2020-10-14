@@ -219,6 +219,25 @@ namespace CosmosDbRepository.Implementation
             return results;
         }
 
+        public async Task<IList<T>> SelectAsync(string queryString, FeedOptions feedOptions = null)
+        {
+            CheckPartionKey(feedOptions);
+
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, queryString, feedOptions ?? _defaultFeedOptions)
+                .AsDocumentQuery();
+
+            var results = new List<T>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                results.AddRange(response.Select(doc => _deserializer(doc)));
+            }
+
+            return results;
+        }
+
         public async Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, string queryString, FeedOptions feedOptions = null)
         {
             feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
