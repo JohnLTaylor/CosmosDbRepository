@@ -342,6 +342,12 @@ namespace CosmosDbRepository.Substitute
             return result.Items;
         }
 
+        public async Task<IList<T>> SelectAsync(string queryString, FeedOptions feedOptions = null)
+        {
+            var result = await SelectAsync<T>(feedOptions?.MaxItemCount ?? 0, default, queryString, feedOptions);
+            return result.Items;
+        }
+
         public Task<CosmosDbRepositoryPagedResults<U>> SelectAsync<U>(int pageSize, string continuationToken, string queryString, FeedOptions feedOptions = null)
         {
             var failure = _selectExceptionConditions.Select(func => func()).FirstOrDefault();
@@ -380,6 +386,57 @@ namespace CosmosDbRepository.Substitute
             }
 
             var result = new CosmosDbRepositoryPagedResults<U>()
+            {
+                Items = items.ToList()
+            };
+
+            if (pageSize > 0 && pageSize < result.Items.Count)
+            {
+                result.ContinuationToken = JsonConvert.SerializeObject(result.Items.Skip(pageSize));
+                result.Items = result.Items.Take(pageSize).ToList();
+            }
+
+            return Task.FromResult(result);
+        }
+
+        public Task<CosmosDbRepositoryPagedResults<T>> SelectAsync(int pageSize, string continuationToken, string queryString, FeedOptions feedOptions = null)
+        {
+            var failure = _selectExceptionConditions.Select(func => func()).FirstOrDefault();
+
+            if (failure != default(DocumentClientException))
+            {
+                return Task.FromException<CosmosDbRepositoryPagedResults<T>>(failure);
+            }
+
+            IEnumerable<T> items;
+
+            if (string.IsNullOrEmpty(continuationToken))
+            {
+                IEnumerable<T> entities;
+
+                try
+                {
+                    var partitionKey = CheckPartitionKey(feedOptions);
+                    entities = GetEntityStorageItems(partitionKey, CheckCrossPartition(feedOptions));
+                }
+                catch (Exception e)
+                {
+                    return Task.FromException<CosmosDbRepositoryPagedResults<T>>(e);
+                }
+
+                if (!_selectQueryFunction.TryGetValue((typeof(T), queryString), out var selectorFunc))
+                {
+                    return Task.FromException<CosmosDbRepositoryPagedResults<T>>(new InvalidOperationException(""));
+                }
+
+                items = ((Func<IEnumerable<T>, IEnumerable<T>>)selectorFunc)(entities).ToArray();
+            }
+            else
+            {
+                items = JsonConvert.DeserializeObject<T[]>(continuationToken);
+            }
+
+            var result = new CosmosDbRepositoryPagedResults<T>()
             {
                 Items = items.ToList()
             };

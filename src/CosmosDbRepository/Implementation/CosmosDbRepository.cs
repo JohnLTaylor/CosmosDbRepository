@@ -268,6 +268,36 @@ namespace CosmosDbRepository.Implementation
             return result;
         }
 
+        public async Task<CosmosDbRepositoryPagedResults<T>> SelectAsync(int pageSize, string continuationToken, string queryString, FeedOptions feedOptions = null)
+        {
+            feedOptions = (feedOptions ?? _defaultFeedOptions).ShallowCopy();
+
+            feedOptions.RequestContinuation = continuationToken;
+            feedOptions.MaxItemCount = pageSize == 0 ? 10000 : pageSize;
+
+            CheckPartionKey(feedOptions);
+
+            var query =
+                _client.CreateDocumentQuery<T>((await _collection).SelfLink, queryString, feedOptions)
+                .AsDocumentQuery();
+
+            var result = new CosmosDbRepositoryPagedResults<T>();
+
+            while (query.HasMoreResults)
+            {
+                var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                result.Items.AddRange(response.Select(doc => _deserializer(doc)));
+
+                if (pageSize > 0 && result.Items.Count >= pageSize)
+                {
+                    result.ContinuationToken = response.ResponseContinuation;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
         public async Task<IList<U>> SelectAsync<U>(Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
         {
             CheckPartionKey(feedOptions);

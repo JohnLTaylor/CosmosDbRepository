@@ -164,7 +164,7 @@ namespace CosmosDbRepository
         public static Task<IList<T>> CrossPartitionSelectAsync<T>(this ICosmosDbRepository<T> repo, string queryString, FeedOptions feedOptions = null)
         {
             feedOptions = SetCrossPartition(feedOptions);
-            return repo.SelectAsync<T>(queryString, feedOptions);
+            return repo.SelectAsync(queryString, feedOptions);
         }
 
         public static Task<CosmosDbRepositoryPagedResults<T>> CrossPartitionSelectAsync<T>(this ICosmosDbRepository<T> repo, int pageSize, string continuationToken, string queryString, FeedOptions feedOptions = null)
