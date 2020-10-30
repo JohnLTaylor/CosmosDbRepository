@@ -563,8 +563,8 @@ namespace CosmosDbRepository.Implementation
 
             try
             {
-                var response = await _client.ReadDocumentAsync<T>(documentLink, requestOptions);
-                result = response.Document;
+                var response = await _client.ReadDocumentAsync<Document>(documentLink, requestOptions);
+                result = _deserializer(response);
             }
             catch (DocumentClientException e)
             {
