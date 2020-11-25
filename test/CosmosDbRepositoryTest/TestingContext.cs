@@ -34,6 +34,7 @@ namespace CosmosDbRepositoryTest
             var builder = new CosmosDbBuilder()
                 .WithId(DbConfig.DbName)
                 .WithDefaultThroughput(400)
+                .WithQueryStats(new QueryStatsMonitor())
                 .AddCollection<T>(TestConfig.CollectionName, repoBuilderCallback);
 
             builderCallback?.Invoke(builder);
@@ -50,6 +51,15 @@ namespace CosmosDbRepositoryTest
                 Repo.DeleteAsync();
                 DbClient.Dispose();
                 _disposed = true;
+            }
+        }
+
+        private class QueryStatsMonitor
+            : ICosmosDbQueryStatsCollector
+        {
+            public void Collect(ICosmosDbQueryStats cosmosDbQueryStats)
+            {
+                Console.WriteLine(cosmosDbQueryStats.ToString());
             }
         }
     }

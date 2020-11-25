@@ -6,7 +6,7 @@ namespace CosmosDbRepository
 {
     public interface ICosmosDbRepositoryBuilder
     {
-        ICosmosDbRepository Build(IDocumentClient client, ICosmosDb documentDb, int? defaultThroughput);
+        ICosmosDbRepository Build(IDocumentClient client, ICosmosDb documentDb, int? defaultThroughput, bool createOnMissing, ICosmosDbQueryStatsCollector statsCollector);
     }
 
     public interface ICosmosDbRepositoryBuilder<T>

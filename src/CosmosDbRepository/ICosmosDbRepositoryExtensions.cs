@@ -316,6 +316,199 @@ namespace CosmosDbRepository
             return storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, requestOptions);
         }
 
+        public async static Task<IList<T>> FindAsync<T, U>(this ICosmosDbRepository<T> repo, IList<U> partitionKeys, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
+        {
+            var results = (await Task.WhenAll(
+                partitionKeys.Select(partitionKey => repo.FindAsync(predicate, clauses, SetPartitionKey(partitionKey, feedOptions)))))
+                .SelectMany(a => a);
+
+            if (results != default && clauses != default)
+            {
+                results = clauses.Invoke(results.AsQueryable());
+            }
+                
+            return results?.ToList();
+        }
+
+        public async static Task<IList<U>> SelectAsync<T, U, V>(this ICosmosDbRepository<T> repo, IList<V> partitionKeys, string queryString, FeedOptions feedOptions = null)
+        {
+            var results = (await Task.WhenAll(
+                partitionKeys.Select(partitionKey => repo.SelectAsync<U>(queryString, SetPartitionKey(partitionKey, feedOptions)))))
+                .SelectMany(a => a);
+
+            return results?.ToList();
+        }
+
+        public async static Task<IList<T>> SelectAsync<T, V>(this ICosmosDbRepository<T> repo, IList<V> partitionKeys, string queryString, FeedOptions feedOptions = null)
+        {
+            var results = (await Task.WhenAll(
+                partitionKeys.Select(partitionKey => repo.SelectAsync<T>(queryString, SetPartitionKey(partitionKey, feedOptions)))))
+                .SelectMany(a => a);
+
+            return results?.ToList();
+        }
+
+        public async static Task<IList<U>> SelectAsync<T, U, V>(this ICosmosDbRepository<T> repo, IList<V> partitionKeys, Expression<Func<T, U>> selector, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        {
+            var results = (await Task.WhenAll(
+                partitionKeys.Select(partitionKey => repo.SelectAsync(selector, selectClauses, SetPartitionKey(partitionKey, feedOptions)))))
+                .SelectMany(a => a);
+
+            if (results != default && selectClauses != default)
+            {
+                results = selectClauses.Invoke(results.AsQueryable());
+            }
+
+            return results?.ToList();
+        }
+
+        public async static Task<IList<U>> SelectAsync<T, U, V, W>(this ICosmosDbRepository<T> repo, IList<W> partitionKeys, Expression<Func<V, U>> selector, Func<IQueryable<T>, IQueryable<V>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        {
+            var results = (await Task.WhenAll(
+                partitionKeys.Select(partitionKey => repo.SelectAsync(selector, whereClauses, selectClauses, SetPartitionKey(partitionKey, feedOptions)))))
+                .SelectMany(a => a);
+
+            if (results != default && selectClauses != default)
+            {
+                results = selectClauses.Invoke(results.AsQueryable());
+            }
+
+            return results?.ToList();
+        }
+
+        public async static Task<IList<U>> SelectManyAsync<T, U, V>(this ICosmosDbRepository<T> repo, IList<V> partitionKeys, Expression<Func<T, IEnumerable<U>>> selector, Func<IQueryable<T>, IQueryable<T>> whereClauses = null, Func<IQueryable<U>, IQueryable<U>> selectClauses = null, FeedOptions feedOptions = null)
+        {
+            var results = (await Task.WhenAll(
+                partitionKeys.Select(partitionKey => repo.SelectManyAsync(selector, whereClauses, selectClauses, SetPartitionKey(partitionKey, feedOptions)))))
+                .SelectMany(a => a);
+
+            if (results != default && selectClauses != default)
+            {
+                results = selectClauses.Invoke(results.AsQueryable());
+            }
+
+            return results?.ToList();
+        }
+
+        public async static Task<int> CountAsync<T, U>(this ICosmosDbRepository<T> repo, IList<U> partitionKeys, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
+        {
+            var result = (await Task.WhenAll(
+                partitionKeys.Select(partitionKey => repo.CountAsync(predicate, clauses, SetPartitionKey(partitionKey, feedOptions)))))
+                .Aggregate((a,v) => a + v);
+
+            return result;
+        }
+
+        public async static Task<T> FindFirstOrDefaultAsync<T, U>(this ICosmosDbRepository<T> repo, IList<U> partitionKeys, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
+        {
+            var results = (await Task.WhenAll(
+                partitionKeys.Select(partitionKey => repo.FindFirstOrDefaultAsync(predicate, clauses, SetPartitionKey(partitionKey, feedOptions)))))
+                .AsQueryable();
+
+            if (results != default && clauses != default)
+            {
+                results = clauses.Invoke(results);
+            }
+
+            return results.FirstOrDefault();
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, TResult>(this IStoredProcedure<T1, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, TResult>(this IStoredProcedure<T1, T2, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, TResult>(this IStoredProcedure<T1, T2, T3, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, TResult>(this IStoredProcedure<T1, T2, T3, T4, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, T8, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, T8, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, T14 t14, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, T14 t14, T15 t15, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
+        public async static Task<IList<TResult>> ExecuteAsync<U, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult>(this IStoredProcedure<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult> storedProcedure, IList<U> partitionKeys, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, T14 t14, T15 t15, T16 t16, RequestOptions requestOptions = null)
+        {
+            return await Task.WhenAll(
+                partitionKeys.Select(partitionKey => storedProcedure.ExecuteAsync(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, SetPartitionKey(partitionKey, requestOptions))));
+        }
+
         private static RequestOptions SetPartitionKey<U>(U partitionKey, RequestOptions requestOptions)
         {
             requestOptions = requestOptions.ShallowCopy() ?? new RequestOptions();

@@ -20,7 +20,12 @@ namespace CosmosDbRepository.Implementation
         Task<string> ICosmosDb.SelfLinkAsync => SelfLinkAsync();
         Task<string> ICosmosDb.AltLinkAsync => AltLinkAsync();
 
-        public CosmosDb(IDocumentClient client, string databaseId, int? defaultThroughput, IEnumerable<ICosmosDbRepositoryBuilder> repositories, bool createOnMissing)
+        public CosmosDb(IDocumentClient client,
+                        string databaseId,
+                        int? defaultThroughput,
+                        IEnumerable<ICosmosDbRepositoryBuilder> repositories,
+                        bool createOnMissing,
+                        ICosmosDbQueryStatsCollector statsCollector)
         {
             if (string.IsNullOrWhiteSpace(databaseId))
             {
@@ -32,7 +37,7 @@ namespace CosmosDbRepository.Implementation
             _defaultThroughput = defaultThroughput;
 
             _database = new AsyncLazy<Database>(() => GetOrCreateDatabaseAsync(createOnMissing));
-            _repositories = repositories.Select(cb => cb.Build(_client, this, _defaultThroughput)).ToList();
+            _repositories = repositories.Select(cb => cb.Build(_client, this, _defaultThroughput, createOnMissing, statsCollector)).ToList();
         }
 
         public async Task<string> SelfLinkAsync() => (await _database).SelfLink;

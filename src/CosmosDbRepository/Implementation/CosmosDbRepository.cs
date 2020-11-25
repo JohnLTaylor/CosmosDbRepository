@@ -37,10 +37,11 @@ namespace CosmosDbRepository.Implementation
         private readonly bool _createOnMissing;
         private readonly List<StoredProcedure> _storedProcedures;
         private AsyncLazy<DocumentCollection> _collection;
-        private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
         private readonly Func<Document, T> _deserializer;
-        private string _polymorphicField;
-        private Dictionary<string, Func<Document, T>> _polymorphicDeserializer;
+        private readonly string _polymorphicField;
+        private readonly Dictionary<string, Func<Document, T>> _polymorphicDeserializer;
+        private readonly ICosmosDbQueryStatsCollector _statsCollector;
+        private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
 
         public string Id { get; }
         public Type Type => typeof(T);
@@ -56,7 +57,8 @@ namespace CosmosDbRepository.Implementation
                                   IEnumerable<StoredProcedure> storedProcedures,
                                   bool createOnMissing,
                                   string polymorphicField,
-                                  (string Value, Type Type)[] polymorphicTypes)
+                                  (string Value, Type Type)[] polymorphicTypes,
+                                  ICosmosDbQueryStatsCollector statsCollector)
         {
             _createOnMissing = createOnMissing;
             _documentDb = documentDb;
@@ -98,6 +100,8 @@ namespace CosmosDbRepository.Implementation
                           ? (Func<Document, T>)CustomDeserializer
                           : CustomDeserializer<T>;
 
+            _statsCollector = statsCollector;
+
             _collection = new AsyncLazy<DocumentCollection>(() => GetOrCreateCollectionAsync(createOnMissing));
         }
 
@@ -106,6 +110,9 @@ namespace CosmosDbRepository.Implementation
             requestOptions = GetPartionKey(entity, requestOptions);
 
             var addedDoc = await _client.CreateDocumentAsync((await _collection).SelfLink, entity, requestOptions);
+            
+            _statsCollector?.Collect(new CosmosDbQueryStats(addedDoc, $"AddAsync<{typeof(T).Name}>"));
+
             return _deserializer(addedDoc.Resource);
         }
 
@@ -124,6 +131,8 @@ namespace CosmosDbRepository.Implementation
             var documentLink = $"{(await _collection).AltLink}/docs/{Uri.EscapeUriString(id)}";
 
             var response = await _client.ReplaceDocumentAsync(documentLink, entity, requestOptions);
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(response, $"ReplaceAsync<{typeof(T).Name}>"));
 
             return (response.StatusCode == HttpStatusCode.NotModified)
                 ? entity
@@ -144,6 +153,8 @@ namespace CosmosDbRepository.Implementation
 
             var response = await _client.UpsertDocumentAsync((await _collection).SelfLink, entity, requestOptions);
 
+            _statsCollector?.Collect(new CosmosDbQueryStats(response, $"UpsertAsync<{typeof(T).Name}>"));
+
             return _deserializer(response.Resource);
         }
 
@@ -158,12 +169,16 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var results = new List<T>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<Document>(response, $"FindAsync<{typeof(T).Name}>"));
                 results.AddRange(response.Select(doc => _deserializer(doc)));
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return results;
         }
@@ -184,10 +199,12 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<T>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<Document>(response, $"FindAsync<{typeof(T).Name}>"));
                 result.Items.AddRange(response.Select(doc => _deserializer(doc)));
 
                 if (pageSize > 0 && result.Items.Count >= pageSize)
@@ -196,6 +213,8 @@ namespace CosmosDbRepository.Implementation
                     break;
                 }
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return result;
         }
@@ -209,12 +228,16 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var results = new List<U>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<U>(response, $"SelectAsync<{typeof(U).Name}>"));
                 results.AddRange(response);
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return results;
         }
@@ -228,12 +251,16 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var results = new List<T>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<Document>(response, $"SelectAsync<{typeof(T).Name}>"));
                 results.AddRange(response.Select(doc => _deserializer(doc)));
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return results;
         }
@@ -252,10 +279,12 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<U>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<U>(response, $"SelectAsync<{typeof(U).Name}>"));
                 result.Items.AddRange(response);
 
                 if (pageSize > 0 && result.Items.Count >= pageSize)
@@ -264,6 +293,8 @@ namespace CosmosDbRepository.Implementation
                     break;
                 }
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return result;
         }
@@ -282,10 +313,12 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<T>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<Document>(response, $"SelectAsync<{typeof(T).Name}>"));
                 result.Items.AddRange(response.Select(doc => _deserializer(doc)));
 
                 if (pageSize > 0 && result.Items.Count >= pageSize)
@@ -294,6 +327,8 @@ namespace CosmosDbRepository.Implementation
                     break;
                 }
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return result;
         }
@@ -309,10 +344,12 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var results = new List<U>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<U>(response, $"SelectAsync<{typeof(U).Name}>"));
                 results.AddRange(response);
             }
 
@@ -335,10 +372,12 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<U>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<U>(response, $"SelectAsync<{typeof(U).Name}>"));
                 result.Items.AddRange(response);
 
                 if (pageSize > 0 && result.Items.Count >= pageSize)
@@ -347,6 +386,8 @@ namespace CosmosDbRepository.Implementation
                     break;
                 }
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return result;
         }
@@ -363,12 +404,16 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var results = new List<U>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<U>(response, $"SelectAsync<{typeof(U).Name}>"));
                 results.AddRange(response);
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return results;
         }
@@ -390,10 +435,12 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<U>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<U>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<U>(response, $"SelectAsync<{typeof(U).Name}>"));
                 result.Items.AddRange(response);
 
                 if (pageSize > 0 && result.Items.Count >= pageSize)
@@ -402,6 +449,8 @@ namespace CosmosDbRepository.Implementation
                     break;
                 }
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return result;
         }
@@ -420,12 +469,16 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var results = new List<TResult>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<TResult>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<TResult>(response, $"SelectManyAsync<{typeof(TResult).Name}>"));
                 results.AddRange(response);
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return results;
         }
@@ -447,10 +500,12 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var result = new CosmosDbRepositoryPagedResults<TResult>();
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<TResult>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<TResult>(response, $"SelectManyAsync<{typeof(TResult).Name}>"));
 
                 result.Items.AddRange(response);
 
@@ -476,12 +531,16 @@ namespace CosmosDbRepository.Implementation
                 .AsDocumentQuery();
 
             var result = 0;
+            var stats = new List<CosmosDbQueryStats>();
 
             while (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<int>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<int>(response, $"CountAsync<{typeof(T).Name}>"));
                 result += response.Count();
             }
+
+            _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
             return result;
         }
@@ -499,16 +558,21 @@ namespace CosmosDbRepository.Implementation
                 .ConditionalApplyClauses(clauses)
                 .AsDocumentQuery();
 
-            T result = default(T);
+            T result = default;
+            var stats = new List<CosmosDbQueryStats>();
 
             if (query.HasMoreResults)
             {
                 var response = await query.ExecuteNextAsync<Document>().ConfigureAwait(true);
+                stats.Add(new CosmosDbQueryStats<Document>(response, $"FindFirstOrDefaultAsync<{typeof(T).Name}>"));
 
                 while (response.Count == 0 && !string.IsNullOrEmpty(response.ResponseContinuation))
                 {
                     response = await query.ExecuteNextAsync<Document>();
+                    stats.Add(new CosmosDbQueryStats<Document>(response, $"FindFirstOrDefaultAsync<{typeof(T).Name}>"));
                 }
+
+                _statsCollector?.Collect(new CosmosDbQueryStats(stats));
 
                 var doc = response.FirstOrDefault();
                 result = doc != default
@@ -537,6 +601,7 @@ namespace CosmosDbRepository.Implementation
             try
             {
                 var response = await _client.ReadDocumentAsync<T>(documentLink, requestOptions);
+                _statsCollector?.Collect(new CosmosDbQueryStats(response, $"GetAsync<{typeof(T).Name}>"));
 
                 result = (response.StatusCode == HttpStatusCode.NotModified)
                     ? entity
@@ -564,6 +629,7 @@ namespace CosmosDbRepository.Implementation
             try
             {
                 var response = await _client.ReadDocumentAsync<Document>(documentLink, requestOptions);
+                _statsCollector?.Collect(new CosmosDbQueryStats(response, $"GetAsync<{typeof(T).Name}>"));
                 result = _deserializer(response);
             }
             catch (DocumentClientException e)
@@ -583,6 +649,7 @@ namespace CosmosDbRepository.Implementation
             CheckPartionKey(requestOptions);
 
             var response = await _client.DeleteDocumentAsync(documentLink, requestOptions);
+            _statsCollector?.Collect(new CosmosDbQueryStats(response, $"DeleteDocumentAsync<{typeof(T).Name}>"));
             return response.StatusCode == HttpStatusCode.NoContent;
 
         }
@@ -602,12 +669,14 @@ namespace CosmosDbRepository.Implementation
             requestOptions = GetPartionKey(entity, requestOptions);
 
             var response = await _client.DeleteDocumentAsync(documentLink, requestOptions);
+            _statsCollector?.Collect(new CosmosDbQueryStats(response, $"DeleteDocumentAsync<{typeof(T).Name}>"));
             return response.StatusCode == HttpStatusCode.NoContent;
         }
 
         public async Task<bool> DeleteAsync(RequestOptions requestOptions = null)
         {
             var response = await _client.DeleteDocumentCollectionAsync((await _collection).SelfLink, requestOptions);
+            _statsCollector?.Collect(new CosmosDbQueryStats(response, "DeleteAsync"));
             _collection = new AsyncLazy<DocumentCollection>(async () => await GetOrCreateCollectionAsync(_createOnMissing));
 
             return response.StatusCode == HttpStatusCode.NoContent;
@@ -615,23 +684,23 @@ namespace CosmosDbRepository.Implementation
 
         public Task Init() => _collection.Value;
 
-        public IStoredProcedure<TResult> StoredProcedure<TResult>(string id) => new StoreProcedureImpl<TResult>(_client, this, id);
-        public IStoredProcedure<TParam,TResult> StoredProcedure<TParam,TResult>(string id) => new StoreProcedureImpl<TParam,TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TResult> StoredProcedure<TParam1, TParam2, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TResult> StoredProcedure<TParam1, TParam2, TParam3,TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(_client, this, id);
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(_client, this, id);
+        public IStoredProcedure<TResult> StoredProcedure<TResult>(string id) => new StoreProcedureImpl<TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam,TResult> StoredProcedure<TParam,TResult>(string id) => new StoreProcedureImpl<TParam,TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TResult> StoredProcedure<TParam1, TParam2, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TResult> StoredProcedure<TParam1, TParam2, TParam3,TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(_client, this, id, _statsCollector);
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(string id) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(_client, this, id, _statsCollector);
 
 
         private async Task<DocumentCollection> GetOrCreateCollectionAsync(bool createOnMissing)

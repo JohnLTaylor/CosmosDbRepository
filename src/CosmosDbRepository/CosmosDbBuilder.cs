@@ -1,5 +1,6 @@
 ﻿using CosmosDbRepository.Implementation;
 using Microsoft.Azure.Documents;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace CosmosDbRepository
         private List<ICosmosDbRepositoryBuilder> _collectionBuilders = new List<ICosmosDbRepositoryBuilder>();
         private int? _defaultThroughput;
         private bool _createOnMissing = true;
+        private ICosmosDbQueryStatsCollector _statsCollector;
 
         public string Id { get; private set; }
 
@@ -39,6 +41,17 @@ namespace CosmosDbRepository
             return this;
         }
 
+        public ICosmosDbBuilder WithPerformanceLogging(ILogger logger, double ruTriggerLevel)
+        {
+            return WithQueryStats(new DefaultQueryStatsCollector(logger, ruTriggerLevel));
+        }
+
+        public ICosmosDbBuilder WithQueryStats(ICosmosDbQueryStatsCollector collector)
+        {
+            _statsCollector = collector;
+            return this;
+        }
+
         public ICosmosDbBuilder AddCollection<T>(string id = null, Action<ICosmosDbRepositoryBuilder<T>> func = null)
         {
             id = GetCollectionName<T>(id);
@@ -62,7 +75,7 @@ namespace CosmosDbRepository
         {
             if (string.IsNullOrWhiteSpace(Id)) throw new InvalidOperationException("Id not specified");
 
-            var documentDb = new CosmosDb(client, Id, _defaultThroughput, _collectionBuilders, _createOnMissing);
+            var documentDb = new CosmosDb(client, Id, _defaultThroughput, _collectionBuilders, _createOnMissing, _statsCollector);
 
             return documentDb;
         }

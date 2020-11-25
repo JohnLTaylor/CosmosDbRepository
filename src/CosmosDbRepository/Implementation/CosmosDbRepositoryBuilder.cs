@@ -132,7 +132,11 @@ namespace CosmosDbRepository.Implementation
             return this;
         }
 
-        public ICosmosDbRepository Build(IDocumentClient client, ICosmosDb documentDb, int? defaultThroughput)
+        public ICosmosDbRepository Build(IDocumentClient client,
+                                         ICosmosDb documentDb,
+                                         int? defaultThroughput,
+                                         bool createOnMissing,
+                                         ICosmosDbQueryStatsCollector statsCollector)
         {
             if (string.IsNullOrWhiteSpace(Id)) throw new InvalidOperationException("Id not specified");
 
@@ -170,9 +174,10 @@ namespace CosmosDbRepository.Implementation
                                              partitionkeyDefinition,
                                              _throughput ?? defaultThroughput,
                                              _storedProcedure,
-                                             _createOnMissing,
+                                             _createOnMissing && createOnMissing,
                                              _polymorphicField,
-                                             _polymorphicValueTypes);
+                                             _polymorphicValueTypes,
+                                             statsCollector);
         }
 
         static MemberInfo FindProperty(LambdaExpression lambdaExpression)
