@@ -27,7 +27,7 @@ namespace CosmosDbRepository
         public static Task<T> UpsertAsync<T, U>(this ICosmosDbRepository<T> repo, U partitionKey, T entity, RequestOptions requestOptions = null)
         {
             requestOptions = SetPartitionKey(partitionKey, requestOptions);
-            return repo.ReplaceAsync(entity, requestOptions);
+            return repo.UpsertAsync(entity, requestOptions);
         }
 
         public static Task<IList<T>> FindAsync<T, U>(this ICosmosDbRepository<T> repo, U partitionKey, Expression<Func<T, bool>> predicate = null, Func<IQueryable<T>, IQueryable<T>> clauses = null, FeedOptions feedOptions = null)
