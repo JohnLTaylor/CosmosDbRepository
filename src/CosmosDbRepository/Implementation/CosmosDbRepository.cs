@@ -600,12 +600,12 @@ namespace CosmosDbRepository.Implementation
 
             try
             {
-                var response = await _client.ReadDocumentAsync<T>(documentLink, requestOptions);
+                var response = await _client.ReadDocumentAsync<Document>(documentLink, requestOptions);
                 _statsCollector?.Collect(new CosmosDbQueryStats(response, $"GetAsync<{typeof(T).Name}>"));
 
                 result = (response.StatusCode == HttpStatusCode.NotModified)
                     ? entity
-                    : response.Document;
+                    : _deserializer(response);
             }
             catch (DocumentClientException e)
             {
