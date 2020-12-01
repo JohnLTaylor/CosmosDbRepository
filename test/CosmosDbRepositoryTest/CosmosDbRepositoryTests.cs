@@ -24,7 +24,7 @@ namespace CosmosDbRepositoryTest
             return context.Repo.AddAsync(data);
         }
 
-        protected TestingContext<T> CreateContext(Action<ICosmosDbBuilder> builderCallback = null, Action<ICosmosDbRepositoryBuilder> repoBuilderCallback = null)
+        protected TestingContext<T> CreateContext(Action<ICosmosDbBuilder> builderCallback = null, Action<ICosmosDbRepositoryBuilder<T>> repoBuilderCallback = null)
         {
             return new TestingContext<T>(builderCallback, repoBuilderCallback);
         }

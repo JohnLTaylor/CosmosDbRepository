@@ -10,6 +10,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace CosmosDbRepository.Implementation
@@ -26,6 +27,7 @@ namespace CosmosDbRepository.Implementation
         : CosmosDbRepository
         , ICosmosDbRepository<T>
     {
+        private static Regex VersionRegex = new Regex("Version: *([0-9]+).([0-9]+)", RegexOptions.Compiled);
         private readonly IDocumentClient _client;
         private readonly ICosmosDb _documentDb;
         private readonly IndexingPolicy _indexingPolicy;
@@ -724,19 +726,34 @@ namespace CosmosDbRepository.Implementation
             {
                 var sps = (await _client.ReadStoredProcedureFeedAsync(resourceResponse.Resource.StoredProceduresLink)).ToArray();
 
-                foreach(var sp in _storedProcedures.Where(sp => sps.FirstOrDefault(p => p.Id == sp.Id)?.Body != sp.Body))
+                foreach(var sp in _storedProcedures)
                 {
-                    var updatedSp  = sps.FirstOrDefault(p => p.Id == sp.Id);
+                    var remotesp = sps.FirstOrDefault(p => p.Id == sp.Id);
 
-                    if (updatedSp == null)
+                    switch (VersionComparer(sp.Body, remotesp?.Body, createOnMissing))
                     {
-                        await _client.CreateStoredProcedureAsync(resourceResponse.Resource.AltLink, sp);
+                        case VersionCompareResult.Throw:
+                            throw new InvalidOperationException($"Remote stored procedure '{sp.Id}' is not compatible with the local version");
+
+                        case VersionCompareResult.Continue:
+                            // Nothing we are good
+                            break;
+
+                        case VersionCompareResult.Update:
+                            if (remotesp == null)
+                            {
+                                await _client.CreateStoredProcedureAsync(resourceResponse.Resource.AltLink, sp);
+                            }
+                            else
+                            {
+                                remotesp.Body = sp.Body;
+                                await _client.ReplaceStoredProcedureAsync(remotesp);
+                            }
+                            break;
+
+                        default:
+                            throw new NotImplementedException("Unsupported VersionCompareResult");
                     }
-                    else
-                    {
-                        updatedSp.Body = sp.Body;
-                        await _client.ReplaceStoredProcedureAsync(updatedSp);
-                    }                 
                 }
             }
 
@@ -852,6 +869,65 @@ namespace CosmosDbRepository.Implementation
             where TModel : T
         {
             return JsonConvert.DeserializeObject<TModel>(document.ToString());
+        }
+
+        private VersionCompareResult VersionComparer(string localBody, string remoteBody, bool createOnMissing)
+        {
+            if (string.IsNullOrEmpty(remoteBody))
+            {
+                return createOnMissing ? VersionCompareResult.Update : VersionCompareResult.Throw;
+            }
+
+            var localMatches = VersionRegex.Match(localBody);
+            var remoteMatches = VersionRegex.Match(remoteBody);
+
+            if (!localMatches.Success && remoteMatches.Success)
+            {
+                return VersionCompareResult.Throw;
+            }
+
+            if (localMatches.Success && !remoteMatches.Success)
+            {
+                return createOnMissing ? VersionCompareResult.Update : VersionCompareResult.Throw;
+            }
+
+            if (!localMatches.Success && !remoteMatches.Success)
+            {
+                return createOnMissing ? VersionCompareResult.Update : VersionCompareResult.Throw;
+            }
+
+            int diff = int.Parse(localMatches.Groups[1].Value) - int.Parse(remoteMatches.Groups[1].Value);
+
+            if (diff < 0)
+            {
+                return VersionCompareResult.Throw;
+            }
+
+            if (diff > 0)
+            {
+                return createOnMissing ? VersionCompareResult.Update : VersionCompareResult.Throw;
+            }
+
+            diff = int.Parse(localMatches.Groups[2].Value) - int.Parse(remoteMatches.Groups[2].Value);
+
+            if (diff < 0)
+            {
+                return VersionCompareResult.Throw;
+            }
+
+            if (diff > 0)
+            {
+                return createOnMissing ? VersionCompareResult.Update : VersionCompareResult.Throw;
+            }
+
+            return VersionCompareResult.Continue;
+        }
+
+        private enum VersionCompareResult
+        {
+            Throw,
+            Continue,
+            Update
         }
     }
 }

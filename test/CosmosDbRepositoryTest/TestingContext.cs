@@ -18,7 +18,7 @@ namespace CosmosDbRepositoryTest
 
         private bool _disposed;
 
-        public TestingContext(Action<ICosmosDbBuilder> builderCallback, Action<ICosmosDbRepositoryBuilder> repoBuilderCallback)
+        public TestingContext(Action<ICosmosDbBuilder> builderCallback, Action<ICosmosDbRepositoryBuilder<T>> repoBuilderCallback)
         {
             var services = TestFramework.Services;
             DbConfig = services.GetRequiredService<IOptions<CosmosDbConfig>>().Value;
