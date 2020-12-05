@@ -15,7 +15,7 @@ namespace CosmosDbRepositoryTest.SQL
 {
     var context = getContext();
     var response = context.getResponse();
-
+console.log(""Hello world"");
     response.setBody(""Hello, World"");
 }";
 

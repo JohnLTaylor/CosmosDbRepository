@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Documents;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace CosmosDbRepository.Implementation
         private List<StoredProcedure> _storedProcedure = new List<StoredProcedure>();
         private IndexingMode _indexingMode = IndexingMode.Consistent;
         private bool _createOnMissing = true;
+        private ILogger _scriptLogger;
         private int? _throughput;
         private Func<T, object> _partitionkeySelector;
         private List<string> _partitionKeyPaths = new List<string>();
@@ -40,6 +42,12 @@ namespace CosmosDbRepository.Implementation
         public ICosmosDbRepositoryBuilder<T> WithThroughput(int? throughput)
         {
             _throughput = throughput;
+            return this;
+        }
+
+        public ICosmosDbRepositoryBuilder<T> EnableScriptLogging(ILogger scriptLogger)
+        {
+            _scriptLogger = scriptLogger;
             return this;
         }
 
@@ -177,7 +185,8 @@ namespace CosmosDbRepository.Implementation
                                              _createOnMissing && createOnMissing,
                                              _polymorphicField,
                                              _polymorphicValueTypes,
-                                             statsCollector);
+                                             statsCollector,
+                                             _scriptLogger);
         }
 
         static MemberInfo FindProperty(LambdaExpression lambdaExpression)

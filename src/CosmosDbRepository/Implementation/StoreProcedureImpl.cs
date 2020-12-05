@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -11,19 +12,32 @@ namespace CosmosDbRepository.Implementation
         protected readonly IDocumentClient Client;
         protected readonly AsyncLazy<Uri> StoredProcUri;
         protected readonly ICosmosDbQueryStatsCollector StatsCollector;
+        private readonly ILogger _scriptLogger;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger)
         {
             Id = id;
             Client = client;
             StoredProcUri = new AsyncLazy<Uri>(() => GetStoredProcUri(repository, id));
             StatsCollector = statsCollector;
+            _scriptLogger = scriptLogger;
         }
 
         protected async Task<TResult> ExecutorAsync<TResult>(RequestOptions requestOptions, params dynamic[] parameters)
         {
+            bool enableScriptLogging = _scriptLogger == default;
+
+            requestOptions = requestOptions.ShallowCopy() ?? new RequestOptions();
+            requestOptions.EnableScriptLogging = enableScriptLogging;
+
             var result = await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, new dynamic[]{ parameters });
             StatsCollector?.Collect(new CosmosDbQueryStats<TResult>(result, $"ExecuteAsync({Id})"));
+
+            if (enableScriptLogging && !string.IsNullOrWhiteSpace(result.ScriptLog))
+            {
+                _scriptLogger.LogInformation(result.ScriptLog);
+            }
+
             return result;
         }
 
@@ -46,8 +60,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -67,8 +81,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -88,8 +102,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -109,8 +123,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -130,8 +144,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -151,8 +165,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -172,8 +186,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -193,8 +207,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -214,8 +228,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -235,8 +249,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -256,8 +270,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -277,8 +291,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -298,8 +312,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -319,8 +333,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -340,8 +354,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -361,8 +375,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
@@ -382,8 +396,8 @@ namespace CosmosDbRepository.Implementation
     {
         private Func<RequestOptions, dynamic[], Task<TResult>> _executor;
 
-        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, Func<Document, TResult> deserializer)
-            : base(client, repository, id, statsCollector)
+        public StoreProcedureImpl(IDocumentClient client, ICosmosDbRepository repository, string id, ICosmosDbQueryStatsCollector statsCollector, ILogger scriptLogger, Func<Document, TResult> deserializer)
+            : base(client, repository, id, statsCollector, scriptLogger)
         {
             _executor = (deserializer != default)
 				? (Func<RequestOptions, dynamic[], Task<TResult>>)((requestOptions, parameters) => PolymorphicExecutor(deserializer, requestOptions, parameters))
