@@ -25,7 +25,7 @@ namespace CosmosDbRepository.Implementation
 
         protected async Task<TResult> ExecutorAsync<TResult>(RequestOptions requestOptions, params dynamic[] parameters)
         {
-            bool enableScriptLogging = _scriptLogger == default;
+            bool enableScriptLogging = _scriptLogger != default;
 
             requestOptions = requestOptions.ShallowCopy() ?? new RequestOptions();
             requestOptions.EnableScriptLogging = enableScriptLogging;
