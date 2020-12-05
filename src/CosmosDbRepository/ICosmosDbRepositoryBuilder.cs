@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Documents;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq.Expressions;
 
@@ -21,5 +22,6 @@ namespace CosmosDbRepository
         ICosmosDbRepositoryBuilder<T> ExcludeIndexPath(params string[] paths);
         ICosmosDbRepositoryBuilder<T> StoredProcedure(string id, string body);
         ICosmosDbRepositoryBuilder<T> EnablePolymorphism<TMember>(Expression<Func<T, TMember>> typeSelectMember, params (TMember Value, Type Type)[] valueTypes);
+        ICosmosDbRepositoryBuilder<T> EnableScriptLogging(ILogger scriptLogger);
     }
 }
