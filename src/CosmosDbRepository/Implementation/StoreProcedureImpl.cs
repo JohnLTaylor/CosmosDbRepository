@@ -30,7 +30,7 @@ namespace CosmosDbRepository.Implementation
             requestOptions = requestOptions.ShallowCopy() ?? new RequestOptions();
             requestOptions.EnableScriptLogging = enableScriptLogging;
 
-            var result = await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, new dynamic[]{ parameters });
+            var result = await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, parameters);
             StatsCollector?.Collect(new CosmosDbQueryStats<TResult>(result, $"ExecuteAsync({Id})"));
 
             if (enableScriptLogging && !string.IsNullOrWhiteSpace(result.ScriptLog))
@@ -43,7 +43,7 @@ namespace CosmosDbRepository.Implementation
 
         protected async Task<TResult> PolymorphicExecutor<TResult>(Func<Document, TResult> deserializer, RequestOptions requestOptions, params dynamic[] parameters)
         {
-            var result = await Client.ExecuteStoredProcedureAsync<Document>(await StoredProcUri.Value, requestOptions, new dynamic[]{ parameters });
+            var result = await Client.ExecuteStoredProcedureAsync<Document>(await StoredProcUri.Value, requestOptions, parameters);
             StatsCollector?.Collect(new CosmosDbQueryStats<Document>(result, $"ExecuteAsync({Id})"));
             return deserializer(result);
         }

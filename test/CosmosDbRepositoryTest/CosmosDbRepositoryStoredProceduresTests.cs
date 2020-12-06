@@ -15,7 +15,6 @@ namespace CosmosDbRepositoryTest.SQL
 {
     var context = getContext();
     var response = context.getResponse();
-console.log(""Hello world"");
     response.setBody(""Hello, World"");
 }";
 
@@ -264,9 +263,9 @@ console.log(""Hello world"");
             }
         }
 
-        private void RepoBuilderCallback<T>(ICosmosDbRepositoryBuilder<T> builder, string spId, string version)
+        private void RepoBuilderCallback<T>(ICosmosDbRepositoryBuilder<T> builder, string spId, string version, string spBody = default)
         {
-            var body = $"// Version: {version}\n{StoredProcedureBody}";
+            var body = $"// Version: {version}\n{spBody ?? StoredProcedureBody}";
 
             builder.StoredProcedure(spId, body);
         }
