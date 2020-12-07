@@ -43,10 +43,18 @@ namespace CosmosDbRepository.Implementation
 
         protected async Task<TResult> PolymorphicExecutor<TResult>(Func<Document, TResult> deserializer, RequestOptions requestOptions, params dynamic[] parameters)
         {
-            var result = await Client.ExecuteStoredProcedureAsync<Document>(await StoredProcUri.Value, requestOptions, parameters);
+            StoredProcedureResponse<Document> result;
+            try
+            {
+                result = await Client.ExecuteStoredProcedureAsync<Document>(await StoredProcUri.Value, requestOptions, parameters);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
             StatsCollector?.Collect(new CosmosDbQueryStats<Document>(result, $"ExecuteAsync({Id})"));
             return deserializer(result);
-        }
+            }
 
         private async Task<Uri> GetStoredProcUri(ICosmosDbRepository repository, string id)
         {

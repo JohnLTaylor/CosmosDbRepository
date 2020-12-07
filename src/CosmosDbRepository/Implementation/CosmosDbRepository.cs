@@ -4,6 +4,7 @@ using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -41,8 +42,10 @@ namespace CosmosDbRepository.Implementation
         private readonly List<StoredProcedure> _storedProcedures;
         private AsyncLazy<DocumentCollection> _collection;
         private readonly Func<Document, T> _deserializer;
+        private readonly Func<JToken, T> _jObjectDeserializer;
         private readonly string _polymorphicField;
         private readonly Dictionary<string, Func<Document, T>> _polymorphicDeserializer;
+        private readonly Dictionary<string, Func<JToken, T>> _polymorphicJObjectDeserializer;
         private readonly ICosmosDbQueryStatsCollector _statsCollector;
         private readonly ILogger _scriptLogger;
         private static readonly ConcurrentDictionary<Type, Func<object, (string id, string eTag)>> _idETagHelper = new ConcurrentDictionary<Type, Func<object, (string id, string eTag)>>();
@@ -100,10 +103,15 @@ namespace CosmosDbRepository.Implementation
 
             _polymorphicField = polymorphicField;
             _polymorphicDeserializer = polymorphicTypes?.ToDictionary(vt => vt.Value, vt => MakeCustomDeserializer(vt.Type));
+            _polymorphicJObjectDeserializer = polymorphicTypes?.ToDictionary(vt => vt.Value, vt => MakeCustomObjectDeserializer(vt.Type));
 
             _deserializer = _polymorphicField != default
                           ? (Func<Document, T>)CustomDeserializer
                           : CustomDeserializer<T>;
+
+            _jObjectDeserializer = _polymorphicField != default
+                          ? (Func<JToken, T>)CustomJObjectDeserializer
+                          : CustomJObjectDeserializer<T>;
 
             _statsCollector = statsCollector;
 
@@ -862,6 +870,25 @@ namespace CosmosDbRepository.Implementation
             return action.Compile();
         }
 
+        private static Func<JToken, T> MakeCustomObjectDeserializer(Type type)
+        {
+            var deserializer = typeof(CosmosDbRepository<T>)
+                .GetMethod(nameof(CustomJObjectDeserializer), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(type);
+
+            // The func takes an int
+            var arg = Expression.Parameter(typeof(JToken));
+
+            // Represent the call out to "AnotherFunc"
+            var call = Expression.Call(null, deserializer, arg);
+
+            // Build the action to just make the call to "AnotherFunc"
+            var action = Expression.Lambda<Func<JToken, T>>(call, arg);
+
+            // Compile the chain and send it out
+            return action.Compile();
+        }
+
         private T CustomDeserializer(Document document)
         {
             var selector = document.GetPropertyValue<string>(_polymorphicField);
@@ -874,13 +901,37 @@ namespace CosmosDbRepository.Implementation
             return JsonConvert.DeserializeObject<TModel>(document.ToString());
         }
 
+        private T CustomJObjectDeserializer(JToken JToken)
+        {
+            var selector = JToken[_polymorphicField];
+            return _polymorphicJObjectDeserializer[selector?.ToString()](JToken);
+        }
+
+        private static T CustomJObjectDeserializer<TModel>(JToken JToken)
+            where TModel : T
+        {
+            return JToken != default ? JToken.ToObject<TModel>() : default(T);
+        }
+
         private Func<Document, TModel> CustomDeserializer<TModel>()
         {
-            var type = typeof(TModel);
+            if (typeof(IEnumerable<T>).IsAssignableFrom(typeof(TModel)))
+            {
+                return (Func<Document, TModel>)(document => (TModel)ListDeserializer(document));
+            }
+            else if (typeof(T).IsAssignableFrom(typeof(TModel)))
+            {
+                return (Func<Document, TModel>)(document => (TModel)(object)_deserializer(document));
+            }
+            else
+            {
+                return default;
+            }
+        }
 
-            return type == typeof(T)
-                ? (Func<Document, TModel>)(document => (TModel)(object)_deserializer(document))
-                : default;
+        private IList<T> ListDeserializer(Document document)
+        {
+            return document.GetPropertyValue<JArray>("items")?.Children().Select(o => _jObjectDeserializer(o)).ToList();
         }
 
         private VersionCompareResult VersionComparer(string localBody, string remoteBody, bool createOnMissing)

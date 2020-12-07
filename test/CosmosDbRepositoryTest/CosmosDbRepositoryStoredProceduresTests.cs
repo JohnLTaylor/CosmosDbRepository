@@ -19,6 +19,27 @@ namespace CosmosDbRepositoryTest.SQL
 }";
 
         [TestMethod]
+        public async Task TestReturingABool_Success()
+        {
+            const string spId = "spTestReturingABool";
+
+            using (var context = CreateContext(repoBuilderCallback: builder => RepoBuilderCallback(builder, spId, "1.0",
+@"function()
+{
+    var context = getContext();
+    var response = context.getResponse();
+    response.setBody(true);
+}")))
+            {
+                var spHelloWorld = context.Repo.StoredProcedure<bool>(spId);
+
+
+                var result = await spHelloWorld.ExecuteAsync();
+                result.Should().Be(true);
+            }
+        }
+
+        [TestMethod]
         public async Task Create_FromBlankWithCreate_Success()
         {
             const string spId = "spHelloWorldFromBlankWithCreate";
