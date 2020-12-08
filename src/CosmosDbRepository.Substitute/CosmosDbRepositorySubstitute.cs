@@ -1,6 +1,7 @@
 ﻿using CosmosDbRepository.Types;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -639,7 +640,7 @@ namespace CosmosDbRepository.Substitute
             }
         }
 
-        public IStoredProcedure<TResult> StoredProcedure<TResult>(string id)
+        public IStoredProcedure<TResult> StoredProcedure<TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -649,7 +650,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TResult>(func);
         }
 
-        public IStoredProcedure<TParam, TResult> StoredProcedure<TParam, TResult>(string id)
+        public IStoredProcedure<TParam, TResult> StoredProcedure<TParam, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -659,7 +660,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TResult> StoredProcedure<TParam1, TParam2, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TResult> StoredProcedure<TParam1, TParam2, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -669,7 +670,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TResult> StoredProcedure<TParam1, TParam2, TParam3, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TResult> StoredProcedure<TParam1, TParam2, TParam3, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -679,7 +680,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -689,7 +690,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -699,7 +700,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -709,7 +710,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -719,7 +720,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -729,7 +730,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -739,7 +740,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -749,7 +750,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -759,7 +760,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -769,7 +770,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -779,7 +780,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -789,7 +790,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
@@ -799,7 +800,7 @@ namespace CosmosDbRepository.Substitute
             return new StoredProcedureSubstitute<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(func);
         }
 
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(string id)
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(string id, ILogger scriptLogger = default)
         {
             if (!_storedProcedureCallback.TryGetValue(id, out var func))
             {
