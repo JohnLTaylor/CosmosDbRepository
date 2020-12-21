@@ -98,6 +98,33 @@ namespace CosmosDbRepositoryTest.SQL
             }
         }
 
+        [TestMethod]
+        public async Task TestReturingAnArrayOfObjects_NoRecords()
+        {
+            const string spId = "spTestReturingAnArrayOfObjectsNoRecords";
+
+            using (var context = CreateContext(repoBuilderCallback: builder =>
+            {
+                builder.EnablePolymorphism(r => r.Rank, new (int, Type)[]
+                {
+                        (1, typeof(OneClass)),
+                        (2, typeof(TwoClass)),
+                        (3, typeof(ThreeClass)),
+                        (4, typeof(FourClass))
+                });
+                RepoBuilderCallback(builder, spId, "1.0",
+@"function()
+{
+}");
+            }))
+            {
+                var spHelloWorld = context.Repo.StoredProcedure<ComplexTestData<Guid>[]>(spId);
+
+                var result = (await spHelloWorld.ExecuteAsync())?.OfType<IBaseClass>().ToArray();
+                result.Should().BeNullOrEmpty();
+            }
+        }
+
         private interface IBaseClass
         {
             public string type { get; set; }
