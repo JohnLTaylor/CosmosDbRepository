@@ -2,6 +2,7 @@
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CosmosDbRepositoryTest.SQL
@@ -37,6 +38,98 @@ namespace CosmosDbRepositoryTest.SQL
                 var result = await spHelloWorld.ExecuteAsync();
                 result.Should().Be(true);
             }
+        }
+
+        [TestMethod]
+        public async Task TestReturingAnArrayOfInt_Success()
+        {
+            const string spId = "spTestReturingAnArrayOfInt";
+
+            using (var context = CreateContext(repoBuilderCallback: builder => RepoBuilderCallback(builder, spId, "1.0",
+@"function()
+{
+    var context = getContext();
+    var response = context.getResponse();
+    response.setBody([ ...Array(10).keys() ]);
+}")))
+            {
+                var spHelloWorld = context.Repo.StoredProcedure<int[]>(spId);
+
+
+                var result = await spHelloWorld.ExecuteAsync();
+                result.Should().HaveCount(10);
+                result.Should().StartWith(0);
+                result.Should().EndWith(9);
+                result.Should().ContainInOrder(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+            }
+        }
+
+        [TestMethod]
+        public async Task TestReturingAnArrayOfObjects_Success()
+        {
+            const string spId = "spTestReturingAnArrayOfObjects";
+
+            using (var context = CreateContext(repoBuilderCallback: builder =>
+                {
+                    builder.EnablePolymorphism(r => r.Rank, new(int, Type)[]
+                    {
+                        (1, typeof(OneClass)),
+                        (2, typeof(TwoClass)),
+                        (3, typeof(ThreeClass)),
+                        (4, typeof(FourClass))
+                    });
+                    RepoBuilderCallback(builder, spId, "1.0",
+    @"function()
+{
+    var context = getContext();
+    var response = context.getResponse();
+    response.setBody([ { rank: 1, type: 'one'}, { rank: 2, type: 'two'}, { rank: 3, type: 'three'}, { rank: 4, type: 'four'} ]);
+}");
+                }))
+            {
+                var spHelloWorld = context.Repo.StoredProcedure<ComplexTestData<Guid>[]>(spId);
+
+                var result = (await spHelloWorld.ExecuteAsync()).OfType<IBaseClass>().ToArray();
+                result.Should().HaveCount(4);
+                result[0].type.Should().Be("one");
+                result[1].type.Should().Be("two");
+                result[2].type.Should().Be("three");
+                result[3].type.Should().Be("four");
+            }
+        }
+
+        private interface IBaseClass
+        {
+            public string type { get; set; }
+        }
+
+        private class OneClass:
+            ComplexTestData<Guid>,
+            IBaseClass
+        {
+            public string type { get; set; }
+        }
+
+        private class TwoClass :
+            ComplexTestData<Guid>,
+            IBaseClass
+        {
+            public string type { get; set; }
+        }
+
+        private class ThreeClass :
+            ComplexTestData<Guid>,
+            IBaseClass
+        {
+            public string type { get; set; }
+        }
+
+        private class FourClass :
+            ComplexTestData<Guid>,
+            IBaseClass
+        {
+            public int id { get; set; }
+            public string type { get; set; }
         }
 
         [TestMethod]

@@ -120,7 +120,7 @@ namespace CosmosDbRepository.Implementation
             requestOptions = GetPartionKey(entity, requestOptions);
 
             var addedDoc = await _client.CreateDocumentAsync((await _collection).SelfLink, entity, requestOptions);
-            
+
             _statsCollector?.Collect(new CosmosDbQueryStats(addedDoc, $"AddAsync<{typeof(T).Name}>"));
 
             return _deserializer(addedDoc.Resource);
@@ -694,25 +694,58 @@ namespace CosmosDbRepository.Implementation
 
         public Task Init() => _collection.Value;
 
-        public IStoredProcedure<TResult> StoredProcedure<TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam,TResult> StoredProcedure<TParam,TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam,TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TResult> StoredProcedure<TParam1, TParam2, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TResult> StoredProcedure<TParam1, TParam2, TParam3,TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(string id, ILogger scriptLogger = default) => new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
-
-
+        public IStoredProcedure<TResult> StoredProcedure<TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam,TResult> StoredProcedure<TParam,TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TResult> StoredProcedure<TParam1, TParam2, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TResult> StoredProcedure<TParam1, TParam2, TParam3,TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+        public IStoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult> StoredProcedure<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(string id, ILogger scriptLogger = default) => typeof(TResult) == typeof(T[])
+            ? new StoreProcedureArrayImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomArrayDeserializer<TResult>())
+            : new StoreProcedureImpl<TParam1, TParam2, TParam3, TParam4, TParam5, TParam6, TParam7, TParam8, TParam9, TParam10, TParam11, TParam12, TParam13, TParam14, TParam15, TParam16, TResult>(_client, this, id, _statsCollector, scriptLogger, CustomDeserializer<TResult>());
+ 
         private async Task<DocumentCollection> GetOrCreateCollectionAsync(bool createOnMissing)
         {
             var documentCollection = new DocumentCollection { Id = Id, IndexingPolicy = _indexingPolicy };
@@ -910,25 +943,58 @@ namespace CosmosDbRepository.Implementation
             return JToken != default ? JToken.ToObject<TModel>() : default(T);
         }
 
+        private Func<Document[], TModel> CustomArrayDeserializer<TModel>()
+        {
+            var elementType = typeof(TModel).GetElementType();
+            var deserializer = GetType().GetMethod("CustomDeserializer", BindingFlags.NonPublic | BindingFlags.Instance, default, new Type[] { }, new ParameterModifier[] { }).MakeGenericMethod(elementType).Invoke(this, new object[] { });
+//            var deserializerMethod = Delegate.CreateDelegate(typeof(Func<,>).MakeGenericType(typeof(Document), ele0mentType), this, deserializer);
+
+            var param = Expression.Parameter(typeof(Document[]), "docs");
+
+            var selectMethod = typeof(Enumerable)
+                .GetMethods()
+                .Where(m => m.Name == "Select")
+                .Single(m => m.GetParameters()[1].ParameterType.Name == "Func`2")
+                .MakeGenericMethod(typeof(Document), elementType);
+
+            var toArrayMethod = typeof(Enumerable)
+                .GetMethods()
+                .Single(m => m.Name == "ToArray")
+                .MakeGenericMethod(elementType);
+
+            var docs = Expression.Convert(param, typeof(IEnumerable<Document>));
+
+            //var x = ((Document[])default).Select(CustomDeserializer<TModel>()).ToArray();
+
+//            var body = Expression.Call(selectMethod, docs, Expression.Constant(deserializer));
+            var body = Expression.Call(toArrayMethod, Expression.Call(selectMethod, docs, Expression.Constant(deserializer)));
+
+            //            return default;
+            return Expression.Lambda<Func<Document[], TModel>>(body, param).Compile();
+
+            //var body = Expression.Assign(IdProperty, Expression.Convert(value, idProperty.PropertyType));
+            //return Expression.Lambda<Action<T, DocumentId>>(body, source, value).Compile();
+
+            //return docs =>
+            //{
+            //    return Enumerable.Select<Document, Document>(docs, doc => doc);
+
+            //    return docs.Select(doc => method.Invoke(this, new object[] { doc })).ToArray();
+            //};
+
+
+        }
+
         private Func<Document, TModel> CustomDeserializer<TModel>()
         {
-            if (typeof(IEnumerable<T>).IsAssignableFrom(typeof(TModel)))
+            if (typeof(T).IsAssignableFrom(typeof(TModel)))
             {
-                return (Func<Document, TModel>)(document => (TModel)ListDeserializer(document));
-            }
-            else if (typeof(T).IsAssignableFrom(typeof(TModel)))
-            {
-                return (Func<Document, TModel>)(document => (TModel)(object)_deserializer(document));
+                return document => (TModel)(object)_deserializer(document);
             }
             else
             {
                 return default;
             }
-        }
-
-        private IList<T> ListDeserializer(Document document)
-        {
-            return document.GetPropertyValue<JArray>("items")?.Children().Select(o => _jObjectDeserializer(o)).ToList();
         }
 
         private VersionCompareResult VersionComparer(string localBody, string remoteBody, bool createOnMissing)
