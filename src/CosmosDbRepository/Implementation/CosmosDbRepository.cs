@@ -1043,7 +1043,7 @@ namespace CosmosDbRepository.Implementation
 
             if (diff < 0)
             {
-                return VersionCompareResult.Throw;
+                return createOnMissing ? VersionCompareResult.Throw : VersionCompareResult.Continue;
             }
 
             if (diff > 0)

@@ -342,7 +342,7 @@ namespace CosmosDbRepositoryTest.SQL
         }
 
         [TestMethod]
-        public async Task Updated_MinorDowngradeWithoutCreate_Failure()
+        public async Task Updated_MinorDowngradeWithoutCreate_Success()
         {
             const string spId = "spHelloWorldMinorDowngradeWithoutCreate";
 
@@ -357,13 +357,13 @@ namespace CosmosDbRepositoryTest.SQL
             {
                 var spHelloWorld = context.Repo.StoredProcedure<string>(spId);
 
-                Func<Task<string>> action = async () => await spHelloWorld.ExecuteAsync();
-                action.Should().ThrowExactly<InvalidOperationException>();
+                var result = await spHelloWorld.ExecuteAsync();
+                result.Should().Be("Hello, World");
             }
         }
 
         [TestMethod]
-        public async Task Updated_MinorUpgradeWithoutCreate_Success()
+        public async Task Updated_MinorUpgradeWithoutCreate_Failure()
         {
             const string spId = "spHelloWorldMinorUpgradeWithoutCreate";
 
