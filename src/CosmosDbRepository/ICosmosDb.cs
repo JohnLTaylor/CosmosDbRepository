@@ -8,6 +8,7 @@ namespace CosmosDbRepository
     {
         Task<string> SelfLinkAsync { get; }
         Task<string> AltLinkAsync { get; }
+        IDocumentClient DocumentClient { get; }
         ICosmosDbRepository<T> Repository<T>();
         ICosmosDbRepository<T> Repository<T>(string id);
         Task<bool> DeleteAsync(RequestOptions options = null);

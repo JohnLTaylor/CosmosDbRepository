@@ -19,6 +19,7 @@ namespace CosmosDbRepository.Implementation
 
         Task<string> ICosmosDb.SelfLinkAsync => SelfLinkAsync();
         Task<string> ICosmosDb.AltLinkAsync => AltLinkAsync();
+        IDocumentClient ICosmosDb.DocumentClient => _client;
 
         public CosmosDb(IDocumentClient client,
                         string databaseId,
