@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 
@@ -33,7 +34,17 @@ namespace CosmosDbRepository.Implementation
                 requestOptions.EnableScriptLogging = true;
             }
 
-            var result = await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, parameters);
+            StoredProcedureResponse<TResult> result;
+
+            try
+            {
+                result = await Client.ExecuteStoredProcedureAsync<TResult>(await StoredProcUri.Value, requestOptions, parameters);
+            }
+            catch (JsonReaderException jre) when (jre.Message.StartsWith("Error reading JObject from JsonReader. Current JsonReader item is not an object:") &&
+                jre.Message.Contains("Path ''"))
+            {
+                return default;
+            }
 
             StatsCollector?.Collect(new CosmosDbQueryStats<TResult>(result, $"ExecuteAsync({Id})"));
 
@@ -55,7 +66,17 @@ namespace CosmosDbRepository.Implementation
                 requestOptions.EnableScriptLogging = true;
             }
 
-            var result = await Client.ExecuteStoredProcedureAsync<Document>(await StoredProcUri.Value, requestOptions, parameters);
+            StoredProcedureResponse<Document> result;
+
+            try
+            {
+                result = await Client.ExecuteStoredProcedureAsync<Document>(await StoredProcUri.Value, requestOptions, parameters);
+            }
+            catch (JsonReaderException jre) when (jre.Message.StartsWith("Error reading JObject from JsonReader. Current JsonReader item is not an object:") &&
+                jre.Message.Contains("Path ''"))
+            {
+                return default;
+            }
 
             if (enableScriptLogging && !string.IsNullOrWhiteSpace(result.ScriptLog))
             {
@@ -69,14 +90,17 @@ namespace CosmosDbRepository.Implementation
         protected async Task<TResult> PolymorphicExecutor<TResult>(Func<Document[], TResult> deserializer, RequestOptions requestOptions, params dynamic[] parameters)
         {
             StoredProcedureResponse<Document[]> result;
+
             try
             {
                 result = await Client.ExecuteStoredProcedureAsync<Document[]>(await StoredProcUri.Value, requestOptions, parameters);
             }
-            catch (Exception e)
+            catch (JsonReaderException jre) when (jre.Message.StartsWith("Error reading JObject from JsonReader. Current JsonReader item is not an object:") &&
+                jre.Message.Contains("Path ''"))
             {
-                throw e;
+                return default;
             }
+
             StatsCollector?.Collect(new CosmosDbQueryStats<Document[]>(result, $"ExecuteAsync({Id})"));
             return deserializer(result);
         }

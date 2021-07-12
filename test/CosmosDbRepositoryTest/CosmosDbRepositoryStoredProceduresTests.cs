@@ -99,6 +99,52 @@ namespace CosmosDbRepositoryTest.SQL
         }
 
         [TestMethod]
+        public async Task TestReturingAnEmptyObject_Success()
+        {
+            const string spId = "TestReturingAnEmptyObject";
+
+            using (var context = CreateContext(repoBuilderCallback: builder =>
+            {
+                RepoBuilderCallback(builder, spId, "1.0",
+@"function()
+{
+    var context = getContext();
+    var response = context.getResponse();
+    response.setBody('');
+}");
+            }))
+            {
+                var spHelloWorld = context.Repo.StoredProcedure<ComplexTestData<Guid>>(spId);
+
+                var result = await spHelloWorld.ExecuteAsync();
+                result.Should().Be(default);
+            }
+        }
+
+        [TestMethod]
+        public async Task TestReturingANullObject_Success()
+        {
+            const string spId = "TestReturingANullObject";
+
+            using (var context = CreateContext(repoBuilderCallback: builder =>
+            {
+                RepoBuilderCallback(builder, spId, "1.0",
+@"function()
+{
+    var context = getContext();
+    var response = context.getResponse();
+    response.setBody(null);
+}");
+            }))
+            {
+                var spHelloWorld = context.Repo.StoredProcedure<ComplexTestData<Guid>>(spId);
+
+                var result = await spHelloWorld.ExecuteAsync();
+                result.Should().Be(default);
+            }
+        }
+
+        [TestMethod]
         public async Task TestReturingAnArrayOfObjects_NoRecords()
         {
             const string spId = "spTestReturingAnArrayOfObjectsNoRecords";
