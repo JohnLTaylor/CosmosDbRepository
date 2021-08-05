@@ -1096,6 +1096,7 @@ namespace CosmosDbRepository.Substitute
             public EntityStorage(T entity, Func<T,T> deepClone)
             {
                 Entity = deepClone(entity);
+                SetId(Entity, GetId(entity));
             }
 
             private static Func<T, DocumentId> BuildIdGet(PropertyInfo idProperty, bool required)
