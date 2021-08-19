@@ -1052,6 +1052,7 @@ namespace CosmosDbRepository.Substitute
             private static readonly Action<T, DocumentId> SetId;
             private static readonly Func<T, long> GetTS;
             private static readonly Action<T, long> SetTS;
+            private static readonly bool CanWrite;
 
             public readonly T Entity;
 
@@ -1086,6 +1087,7 @@ namespace CosmosDbRepository.Substitute
                 var idProperty = properties["id"];
                 GetId = BuildIdGet(idProperty, true);
                 SetId = BuildIdSet(idProperty, true);
+                CanWrite = idProperty.CanWrite;
 
                 properties.TryGetValue("_etag", out var eTagProperty);
 
@@ -1101,7 +1103,11 @@ namespace CosmosDbRepository.Substitute
             public EntityStorage(T entity, Func<T,T> deepClone)
             {
                 Entity = deepClone(entity);
-                SetId(Entity, GetId(entity));
+
+                if (CanWrite)
+                {
+                    SetId(Entity, GetId(entity));
+                }
             }
 
             private static Func<T, DocumentId> BuildIdGet(PropertyInfo idProperty, bool required)
