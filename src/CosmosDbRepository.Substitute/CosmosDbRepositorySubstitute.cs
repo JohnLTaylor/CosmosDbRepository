@@ -274,6 +274,11 @@ namespace CosmosDbRepository.Substitute
 
         public Task<T> GetAsync(T entity, RequestOptions requestOptions = null)
         {
+            if ((object)entity == default)
+            {
+                throw new ArgumentNullException();
+            }
+
             var failure = _getExceptionConditions.Select(func => func(entity)).FirstOrDefault();
 
             if (failure != default(DocumentClientException))
@@ -294,6 +299,11 @@ namespace CosmosDbRepository.Substitute
 
         public Task<T> GetAsync(DocumentId itemId, RequestOptions requestOptions = null)
         {
+            if (itemId == default)
+            {
+                throw new ArgumentNullException();
+            }
+
             var failure = _getExceptionConditions.Select(func => func(itemId)).FirstOrDefault();
 
             if (failure != default(DocumentClientException))
